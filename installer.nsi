@@ -29,7 +29,7 @@ Section "Install"
   SetOutPath $INSTDIR
   File "Release\OpenSub.exe"
   SetRegView 64
-  WriteRegStr HKCR '*\shell\OSubAgent\command' "" '"$INSTDIR\OpenSub.exe" %1'
+  WriteRegStr HKCR '*\shell\Download subtitles from OpenSubtitles.org\command' "" '"$INSTDIR\OpenSub.exe" %1'
   
   ; uninstall
   WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\OSubAgent" "DisplayName" "OSubAgent"

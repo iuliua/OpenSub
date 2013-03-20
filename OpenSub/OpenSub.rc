@@ -70,7 +70,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDR_MAINFRAME           ICON                    "res\\OpenSub.ico"
+IDR_MAINFRAME           ICON                    "C:\\tmp\\Images\\favicon.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -78,17 +78,18 @@ IDR_MAINFRAME           ICON                    "res\\OpenSub.ico"
 //
 
 IDD_OPENSUB_DIALOG DIALOGEX 0, 0, 454, 199
-STYLE DS_ABSALIGN | DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_ABSALIGN | DS_SETFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "OpenSub"
 FONT 10, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | SS_CENTERIMAGE | WS_GROUP,7,180,339,14
-    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,19,444,159
+    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,36,444,142
     PUSHBUTTON      "Download",IDC_BUTTON1,401,180,50,14
     COMBOBOX        IDC_COMBO1,367,7,32,41,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_COMBO2,401,7,50,41,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Explore",IDC_BUTTON2,349,180,50,14
+    CONTROL         135,IDC_STATIC,"Static",SS_BITMAP,7,7,90,25,WS_EX_STATICEDGE
 END
 
 
@@ -149,6 +150,13 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP1             BITMAP                  "C:\\tmp\\Images\\logo.bmp"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

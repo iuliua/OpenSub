@@ -178,7 +178,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="C:\upx309w\upx.exe -qq &quot;$(TargetPath)&quot;&#x0D;&#x0A;&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /V1 $(SolutionDir)\installer.nsi"
+				CommandLine="C:\upx309w\upx.exe -qq &quot;$(TargetPath)&quot;&#x0D;&#x0A;&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /V1 $(SolutionDir)\installer.nsi&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -266,6 +266,14 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+			<File
+				RelativePath="..\Images\favicon.ico"
+				>
+			</File>
+			<File
+				RelativePath="..\Images\logo.bmp"
+				>
+			</File>
 			<File
 				RelativePath=".\res\OpenSub.ico"
 				>
