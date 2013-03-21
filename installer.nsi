@@ -47,7 +47,7 @@ SectionEnd
 Section "Uninstall"
   SetRegView 64
   ; Remove registry keys
-  DeleteRegKey HKCR "*\shell\OSubAgent"
+  DeleteRegKey HKCR '*\shell\Download subtitles from OpenSubtitles.org'
   DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\OSubAgent"
   ; Remove files and uninstaller
   Delete $INSTDIR\OpenSub.exe
