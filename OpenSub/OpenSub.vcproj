@@ -178,7 +178,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="C:\upx309w\upx.exe -qq &quot;$(TargetPath)&quot;&#x0D;&#x0A;&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /V1 $(SolutionDir)\installer.nsi&#x0D;&#x0A;"
+				CommandLine="C:\upx309w\upx.exe -qq &quot;$(TargetPath)&quot;&#x0D;&#x0A;&quot;C:\Program Files (x86)\NSIS\makensis.exe&quot; /V1 &quot;$(SolutionDir)\installer.nsi&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
