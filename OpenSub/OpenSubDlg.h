@@ -40,6 +40,7 @@ private:
    void              UpdateList();
 public:
    afx_msg void      OnLbnSelchangeList2();
+   afx_msg void      OnSysCommand(UINT nID,LPARAM lParam);
 private:
    CListCtrl         m_list1;
 public:

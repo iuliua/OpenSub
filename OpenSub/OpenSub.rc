@@ -70,7 +70,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDR_MAINFRAME           ICON                    "C:\\tmp\\Images\\favicon.ico"
+IDR_MAINFRAME           ICON                    "..\\Images\\favicon.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -84,12 +84,24 @@ CAPTION "OpenSub"
 FONT 10, "Microsoft Sans Serif", 400, 0, 0x0
 BEGIN
     CONTROL         "",IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | SS_CENTERIMAGE | WS_GROUP,7,180,339,14
-    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,36,444,142
+    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,20,444,158
     PUSHBUTTON      "Download",IDC_BUTTON1,401,180,50,14
     COMBOBOX        IDC_COMBO1,367,7,32,41,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_COMBO2,401,7,50,41,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Explore",IDC_BUTTON2,349,180,50,14
-    CONTROL         135,IDC_STATIC,"Static",SS_BITMAP,7,7,90,25,WS_EX_STATICEDGE
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 141, 124
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,41,98,50,14
+    CONTROL         135,IDC_STATIC,"Static",SS_BITMAP,7,49,121,32,WS_EX_STATICEDGE
+    ICON            IDR_MAINFRAME,IDC_STATIC,55,7,21,20
+    LTEXT           "OpenSub 2.5b",IDC_STATIC,43,29,47,8
+    LTEXT           "Iuliu Atudosiei",IDC_STATIC,43,39,46,8
+    LTEXT           "Powered by OpenSubtitles",IDC_STATIC,25,84,86,8
 END
 
 
@@ -147,6 +159,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 194
     END
+
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 134
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 117
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -156,7 +176,18 @@ END
 // Bitmap
 //
 
-IDB_BITMAP1             BITMAP                  "C:\\tmp\\Images\\logo.bmp"
+IDB_BITMAP1             BITMAP                  "..\\Images\\logo.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_ABOUTBOX            "About OpenSub"
+END
+
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

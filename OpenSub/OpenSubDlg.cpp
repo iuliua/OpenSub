@@ -6,7 +6,38 @@
 //#ifdef _DEBUG
 //#define new DEBUG_NEW
 //#endif
+// CAboutDlg dialog used for App About
 
+class CAboutDlg : public CDialog
+{
+public:
+   CAboutDlg();
+
+   // Dialog Data
+   enum { IDD = IDD_ABOUTBOX };
+
+protected:
+   virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+   // Implementation
+protected:
+   DECLARE_MESSAGE_MAP()
+};
+
+CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
+{
+}
+
+void CAboutDlg::DoDataExchange(CDataExchange* pDX)
+{
+   CDialog::DoDataExchange(pDX);
+}
+
+BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
+END_MESSAGE_MAP()
+
+
+// Cabout_dialogDlg dialog
 // COpenSubDlg dialog
 
 //+------------------------------------------------------------------+
@@ -34,6 +65,7 @@ BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_WM_PAINT()
    ON_WM_QUERYDRAGICON()
    //}}AFX_MSG_MAP
+	ON_WM_SYSCOMMAND()
     ON_MESSAGE(WM_SEARCH_FINISHED,OnSearchFinished)
     ON_MESSAGE(WM_COPYDATA,OnCopyData)
     ON_BN_CLICKED(IDC_BUTTON1, &COpenSubDlg::OnBnClickedButton1)
@@ -88,7 +120,25 @@ void COpenSubDlg::SetTitle()
 BOOL COpenSubDlg::OnInitDialog()
   {
    CDialog::OnInitDialog();
+   // Add "About..." menu item to system menu.
 
+   // IDM_ABOUTBOX must be in the system command range.
+   ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
+   ASSERT(IDM_ABOUTBOX < 0xF000);
+
+   CMenu* pSysMenu = GetSystemMenu(FALSE);
+   if (pSysMenu != NULL)
+   {
+      BOOL bNameValid;
+      CString strAboutMenu;
+      bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
+      ASSERT(bNameValid);
+      if (!strAboutMenu.IsEmpty())
+      {
+         pSysMenu->AppendMenu(MF_SEPARATOR);
+         pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
+      }
+   }
    // Set the icon for this dialog.  The framework does this automatically
    //  when the application's main window is not a dialog
    SetIcon(m_hIcon, TRUE);         // Set big icon
@@ -300,6 +350,18 @@ LRESULT COpenSubDlg::OnSearchFinished(WPARAM wParam, LPARAM lParam)
    m_list1.EnableWindow(TRUE);
    return(0);
   }
+void COpenSubDlg::OnSysCommand(UINT nID, LPARAM lParam)
+{
+   if ((nID & 0xFFF0) == IDM_ABOUTBOX)
+   {
+      CAboutDlg dlgAbout;
+      dlgAbout.DoModal();
+   }
+   else
+   {
+      CDialog::OnSysCommand(nID, lParam);
+   }
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
