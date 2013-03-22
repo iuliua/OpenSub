@@ -26,6 +26,9 @@
 #include <vector>
 #include <new.h>
 #include <wininet.h>
+#include "OpenSub.h"
+#include "LinkStaticControl.h"
+
 using namespace pugi;
 #define WM_SEARCH_FINISHED    WM_APP + 0x10
 #define PRINT_MESSAGE 1

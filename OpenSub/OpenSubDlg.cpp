@@ -1,111 +1,15 @@
-
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 #include "stdafx.h"
-#include "OpenSub.h"
 #include "OpenSubDlg.h"
-
-//#ifdef _DEBUG
-//#define new DEBUG_NEW
-//#endif
-// CAboutDlg dialog used for App About
-
-class CAboutDlg : public CDialog
-{
-public:
-   CAboutDlg();
-   virtual BOOL      OnInitDialog();
-
-   // Dialog Data
-   enum { IDD = IDD_ABOUTBOX };
-
-protected:
-   virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
-   // Implementation
-protected:
-   DECLARE_MESSAGE_MAP()
-public:
-    CLink             m_link;
-    CFont             m_font;
-
-};
-
-CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
-{
-}
-BOOL CAboutDlg::OnInitDialog()
-{
-    CDialog::OnInitDialog();
-    m_link.SetWindowText(L"www.opensubtitles.org");
-    return TRUE;
-}
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
-{
-   CDialog::DoDataExchange(pDX);
-   DDX_Control(pDX, IDC_LINK,m_link);
-}
-
-BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
-END_MESSAGE_MAP()
-
-
-
-CLink::CLink() : CStatic()
-{
-    m_PointerOnWnd=false;
-    m_bck_brush.CreateSolidBrush(RGB(0,0,234));
-}
-void CLink::DoDataExchange(CDataExchange* pDX)
-{
-    CStatic::DoDataExchange(pDX);
-}
-void CLink::OnMouseMove(UINT nFlags, CPoint point)
-{
-    SetCapture();               //  Capture the mouse input
-    CRect wndRect;
-    GetWindowRect(&wndRect);
-    ScreenToClient(&wndRect);
-    if (wndRect.PtInRect(point))	
-    {  // Test if the pointer is on the window
-        if (m_PointerOnWnd != TRUE)	
-        {
-            LOGFONT lfLogFont;
-            GetFont()->GetLogFont(&lfLogFont);
-            lfLogFont.lfUnderline = 1;
-            m_font.Detach();
-            m_font.CreateFontIndirect(&lfLogFont);
-            SetFont(&m_font);
-            this->RedrawWindow();
-            m_PointerOnWnd = TRUE;
-        }
-    } 
-    else
-    {
-        LOGFONT lfLogFont;
-        GetFont()->GetLogFont(&lfLogFont);
-        lfLogFont.lfUnderline = 0;
-        m_font.Detach();
-        m_font.CreateFontIndirect(&lfLogFont);
-        SetFont(&m_font);
-        this->RedrawWindow();
-        ReleaseCapture();
-        m_PointerOnWnd = FALSE;
-    }
-    CWnd::OnMouseMove(nFlags, point);
-}
-HBRUSH CLink::CtlColor(CDC* pDC, UINT nCtlColor) 
-{
-    pDC->SetBkMode(TRANSPARENT);
-    pDC->SetTextColor(RGB(0,0,234));
-    return (HBRUSH) GetStockObject(NULL_BRUSH);
-}
-BEGIN_MESSAGE_MAP(CLink, CStatic)
-    ON_WM_MOUSEMOVE()
-    ON_WM_CTLCOLOR_REFLECT()
-END_MESSAGE_MAP()
-
-// Cabout_dialogDlg dialog
-// COpenSubDlg dialog
-
+#include "AboutDialog.h"
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -132,12 +36,12 @@ BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_WM_QUERYDRAGICON()
    //}}AFX_MSG_MAP
 	ON_WM_SYSCOMMAND()
-    ON_MESSAGE(WM_SEARCH_FINISHED,OnSearchFinished)
-    ON_MESSAGE(WM_COPYDATA,OnCopyData)
-    ON_BN_CLICKED(IDC_BUTTON1, &COpenSubDlg::OnBnClickedButton1)
-    ON_CBN_SELCHANGE(IDC_COMBO1, &COpenSubDlg::OnCbnSelchangeCombo1)
-    ON_CBN_SELCHANGE(IDC_COMBO2, &COpenSubDlg::OnCbnSelchangeCombo1)
-    ON_BN_CLICKED(IDC_BUTTON2, &COpenSubDlg::OnBnClickedButton2)
+   ON_MESSAGE(WM_SEARCH_FINISHED,OnSearchFinished)
+   ON_MESSAGE(WM_COPYDATA,OnCopyData)
+   ON_BN_CLICKED(IDC_BUTTON1, &COpenSubDlg::OnBnClickedButton1)
+   ON_CBN_SELCHANGE(IDC_COMBO1, &COpenSubDlg::OnCbnSelchangeCombo1)
+   ON_CBN_SELCHANGE(IDC_COMBO2, &COpenSubDlg::OnCbnSelchangeCombo1)
+   ON_BN_CLICKED(IDC_BUTTON2, &COpenSubDlg::OnBnClickedButton2)
 END_MESSAGE_MAP()
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -253,6 +157,9 @@ LRESULT COpenSubDlg::OnCopyData(WPARAM wParam, LPARAM lParam)
     }
     return(0);
 }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 CString COpenSubDlg::Read7ZipPath()
 {
     CString cSvar = L"";
@@ -416,6 +323,9 @@ LRESULT COpenSubDlg::OnSearchFinished(WPARAM wParam, LPARAM lParam)
    m_list1.EnableWindow(TRUE);
    return(0);
   }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 void COpenSubDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
    if ((nID & 0xFFF0) == IDM_ABOUTBOX)
@@ -480,7 +390,6 @@ void COpenSubDlg::OnCbnSelchangeCombo1()
   {
    UpdateList();
   }
-
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -517,6 +426,9 @@ void COpenSubDlg::UpdateList()
       m_list1.SetItemText(nItem, 2, data.matched_by);
      }
   }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 void COpenSubDlg::OnBnClickedButton2()
   {
    InputFileInfo file_info(theApp.m_lpCmdLine);

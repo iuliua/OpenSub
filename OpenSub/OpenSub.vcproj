@@ -191,7 +191,15 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\AboutDialog.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\InputFileInfo.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\LinkStaticControl.cpp"
 				>
 			</File>
 			<File
@@ -237,7 +245,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\AboutDialog.h"
+				>
+			</File>
+			<File
 				RelativePath=".\InputFileInfo.h"
+				>
+			</File>
+			<File
+				RelativePath=".\LinkStaticControl.h"
 				>
 			</File>
 			<File
