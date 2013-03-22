@@ -11,7 +11,7 @@
 			<DebugSettings
 				Command="$(TargetPath)"
 				WorkingDirectory=""
-				CommandArguments="C:\tmp\Green Lantern.avi"
+				CommandArguments="C:\tmp\Aliens.avi"
 				Attach="false"
 				DebuggerType="3"
 				Remote="1"

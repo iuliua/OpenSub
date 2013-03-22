@@ -45,11 +45,17 @@ private:
    CListCtrl         m_list1;
 public:
    afx_msg void      OnBnClickedButton1();
+   afx_msg void      OnLinkClicked();
+   afx_msg void      OnLinkClicked2();
    CComboBox         m_cmb_lang;
    afx_msg void      OnCbnSelchangeCombo1();
    CComboBox         m_cmb_match;
    CButton           m_btn_download;
    CButton           m_btn_explore;
+   CButton           m_btn_play;
+   CLink             m_link;
+   CLink             m_link2;
    afx_msg void      OnBnClickedButton2();
+   afx_msg void      OnBnClickedButton3();
   };
 //+------------------------------------------------------------------+

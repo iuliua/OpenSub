@@ -30,6 +30,9 @@ void COpenSubDlg::DoDataExchange(CDataExchange* pDX)
    DDX_Control(pDX, IDC_COMBO2, m_cmb_match);
    DDX_Control(pDX, IDC_BUTTON1, m_btn_download);
    DDX_Control(pDX, IDC_BUTTON2, m_btn_explore);
+   DDX_Control(pDX, IDC_BUTTON3, m_btn_play);
+   DDX_Control(pDX, IDC_LINK_MAIN, m_link);
+   DDX_Control(pDX, IDC_LINK_MAIN2, m_link2);
   }
 BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_WM_PAINT()
@@ -42,6 +45,9 @@ BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_CBN_SELCHANGE(IDC_COMBO1, &COpenSubDlg::OnCbnSelchangeCombo1)
    ON_CBN_SELCHANGE(IDC_COMBO2, &COpenSubDlg::OnCbnSelchangeCombo1)
    ON_BN_CLICKED(IDC_BUTTON2, &COpenSubDlg::OnBnClickedButton2)
+   ON_BN_CLICKED(IDC_BUTTON3, &COpenSubDlg::OnBnClickedButton3)
+   ON_BN_CLICKED(IDC_LINK_MAIN,&OnLinkClicked)
+   ON_BN_CLICKED(IDC_LINK_MAIN2,&OnLinkClicked2)
 END_MESSAGE_MAP()
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -125,6 +131,7 @@ BOOL COpenSubDlg::OnInitDialog()
    m_cmb_match.SetCurSel(1);
    m_btn_download.EnableWindow(FALSE);
    m_btn_explore.EnableWindow(FALSE);
+   m_btn_play.EnableWindow(FALSE);
    m_cmb_lang.EnableWindow(FALSE);
    m_cmb_match.EnableWindow(FALSE);
    m_list1.EnableWindow(FALSE);
@@ -318,6 +325,7 @@ LRESULT COpenSubDlg::OnSearchFinished(WPARAM wParam, LPARAM lParam)
    UpdateList();
    m_btn_download.EnableWindow(TRUE);
    m_btn_explore.EnableWindow(TRUE);
+   m_btn_play.EnableWindow(TRUE);
    m_cmb_lang.EnableWindow(TRUE);
    m_cmb_match.EnableWindow(TRUE);
    m_list1.EnableWindow(TRUE);
@@ -446,4 +454,41 @@ void COpenSubDlg::OnBnClickedButton2()
       CloseHandle(processInfo.hThread);
      }
   }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void COpenSubDlg::OnBnClickedButton3()
+{
+   InputFileInfo file_info(theApp.m_lpCmdLine);
+   ShellExecute(NULL,L"open",file_info.file_full_name,0,0,SW_SHOW); 
+}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void COpenSubDlg::OnLinkClicked()
+{
+   ShellExecute(NULL,L"open",L"http://www.opensubtitles.org",NULL,NULL,SW_SHOW);
+}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void COpenSubDlg::OnLinkClicked2()
+{
+   InputFileInfo file_info(theApp.m_lpCmdLine);
+   
+   int idx_lang=m_cmb_lang.GetCurSel();
+   int idx_match=m_cmb_match.GetCurSel();
+   if(idx_lang>=0&&idx_match>=0)
+   {
+      CString str_lang,str_match;
+      CString str;
+      m_cmb_lang.GetLBText(idx_lang,str_lang);
+      m_cmb_match.GetLBText(idx_match,str_match);
+      if(wcscmp(str_match,L"fulltext")==0)
+         str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviename-%s",(LPCWSTR)str_lang,file_info.file_name_no_extension);
+      if(wcscmp(str_match,L"moviehash")==0)
+         str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviebytesize-%s/moviehash-%s",(LPCWSTR)str_lang,file_info.file_size,file_info.file_hash);
+      ShellExecute(NULL,L"open",str,NULL,NULL,SW_SHOW);
+   }
+}
 //+------------------------------------------------------------------+
