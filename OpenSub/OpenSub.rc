@@ -98,10 +98,10 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,41,98,50,14
     CONTROL         135,IDC_STATIC,"Static",SS_BITMAP,7,49,121,32,WS_EX_STATICEDGE
-    ICON            IDR_MAINFRAME,IDC_STATIC,55,7,21,20
+    ICON            IDR_MAINFRAME,IDC_STATIC,55,7,20,20
     LTEXT           "OpenSub 2.5b",IDC_STATIC,43,29,47,8
     LTEXT           "Iuliu Atudosiei",IDC_STATIC,43,39,46,8
-    LTEXT           "Powered by OpenSubtitles",IDC_STATIC,25,84,86,8
+    LTEXT           "Powered by OpenSubtitles",IDC_LINK,25,84,86,8,SS_NOTIFY
 END
 
 

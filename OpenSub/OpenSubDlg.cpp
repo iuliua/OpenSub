@@ -12,6 +12,7 @@ class CAboutDlg : public CDialog
 {
 public:
    CAboutDlg();
+   virtual BOOL      OnInitDialog();
 
    // Dialog Data
    enum { IDD = IDD_ABOUTBOX };
@@ -22,20 +23,85 @@ protected:
    // Implementation
 protected:
    DECLARE_MESSAGE_MAP()
+public:
+    CLink             m_link;
+    CFont             m_font;
+
 };
 
 CAboutDlg::CAboutDlg() : CDialog(CAboutDlg::IDD)
 {
 }
-
+BOOL CAboutDlg::OnInitDialog()
+{
+    CDialog::OnInitDialog();
+    m_link.SetWindowText(L"www.opensubtitles.org");
+    return TRUE;
+}
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
    CDialog::DoDataExchange(pDX);
+   DDX_Control(pDX, IDC_LINK,m_link);
 }
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
 END_MESSAGE_MAP()
 
+
+
+CLink::CLink() : CStatic()
+{
+    m_PointerOnWnd=false;
+    m_bck_brush.CreateSolidBrush(RGB(0,0,234));
+}
+void CLink::DoDataExchange(CDataExchange* pDX)
+{
+    CStatic::DoDataExchange(pDX);
+}
+void CLink::OnMouseMove(UINT nFlags, CPoint point)
+{
+    SetCapture();               //  Capture the mouse input
+    CRect wndRect;
+    GetWindowRect(&wndRect);
+    ScreenToClient(&wndRect);
+    if (wndRect.PtInRect(point))	
+    {  // Test if the pointer is on the window
+        if (m_PointerOnWnd != TRUE)	
+        {
+            LOGFONT lfLogFont;
+            GetFont()->GetLogFont(&lfLogFont);
+            lfLogFont.lfUnderline = 1;
+            m_font.Detach();
+            m_font.CreateFontIndirect(&lfLogFont);
+            SetFont(&m_font);
+            this->RedrawWindow();
+            m_PointerOnWnd = TRUE;
+        }
+    } 
+    else
+    {
+        LOGFONT lfLogFont;
+        GetFont()->GetLogFont(&lfLogFont);
+        lfLogFont.lfUnderline = 0;
+        m_font.Detach();
+        m_font.CreateFontIndirect(&lfLogFont);
+        SetFont(&m_font);
+        this->RedrawWindow();
+        ReleaseCapture();
+        m_PointerOnWnd = FALSE;
+    }
+    CWnd::OnMouseMove(nFlags, point);
+}
+HBRUSH CLink::CtlColor(CDC* pDC, UINT nCtlColor) 
+{
+    pDC->SetBkMode(TRANSPARENT);
+    pDC->SetTextColor(RGB(0,0,234));
+    return (HBRUSH) GetStockObject(NULL_BRUSH);
+}
+BEGIN_MESSAGE_MAP(CLink, CStatic)
+    ON_WM_MOUSEMOVE()
+    ON_WM_CTLCOLOR_REFLECT()
+END_MESSAGE_MAP()
 
 // Cabout_dialogDlg dialog
 // COpenSubDlg dialog
