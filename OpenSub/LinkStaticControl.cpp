@@ -3,16 +3,8 @@
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-CLink::CLink() : CStatic()
+CLink::CLink():CStatic(),m_PointerOnWnd(FALSE)
 {
-   m_PointerOnWnd=false;
-}
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-void CLink::DoDataExchange(CDataExchange* pDX)
-{
-   CStatic::DoDataExchange(pDX);
 }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -25,27 +17,19 @@ void CLink::OnMouseMove(UINT nFlags, CPoint point)
    ScreenToClient(&wndRect);
    if (wndRect.PtInRect(point))	
    {  
-      if (m_PointerOnWnd != TRUE)	
+      if (m_PointerOnWnd!=TRUE)	
       {
          UnderlineText(1); 
-         m_PointerOnWnd = TRUE;
+         m_PointerOnWnd=TRUE;
       }
    } 
    else
    {
       UnderlineText(0); 
       ReleaseCapture();
-      m_PointerOnWnd = FALSE;
+      m_PointerOnWnd=FALSE;
    }
    CWnd::OnMouseMove(nFlags, point);
-}
-HBRUSH CLink::CtlColor(CDC* pDC, UINT nCtlColor) 
-{
-   m_bck_brush.DeleteObject();
-   m_bck_brush.CreateSysColorBrush(COLOR_BTNFACE);
-   pDC->SetBkMode(TRANSPARENT);
-   pDC->SetTextColor(RGB(0,0,234));
-   return m_bck_brush;
 }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -63,9 +47,36 @@ void CLink::UnderlineText(BOOL underline)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
+HBRUSH CLink::CtlColor(CDC* pDC, UINT nCtlColor) 
+{
+    m_bck_brush.DeleteObject();
+    m_bck_brush.CreateSysColorBrush(COLOR_BTNFACE);
+    pDC->SetBkMode(TRANSPARENT);
+    pDC->SetTextColor(RGB(0,0,234));
+    return m_bck_brush;
+}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+afx_msg BOOL CLink::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
+{
+    ::SetCursor(AfxGetApp()->LoadStandardCursor(IDC_HAND));
+    return TRUE;
+}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void CLink::DoDataExchange(CDataExchange* pDX)
+{
+    CStatic::DoDataExchange(pDX);
+}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 BEGIN_MESSAGE_MAP(CLink, CStatic)
    ON_WM_MOUSEMOVE()
    ON_WM_CTLCOLOR_REFLECT()
+   ON_WM_SETCURSOR()
 END_MESSAGE_MAP()
-
+//+------------------------------------------------------------------+
 

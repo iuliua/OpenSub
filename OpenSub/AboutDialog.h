@@ -1,23 +1,23 @@
 #pragma once
-
+//+------------------------------------------------------------------+
+//| custom control for internet links                                |
+//+------------------------------------------------------------------+
 class CAboutDlg : public CDialog
 {
+
+private:
+    CLink             m_link;
+    CFont             m_font;
+
 public:
    CAboutDlg();
    virtual BOOL      OnInitDialog();
 
-   // Dialog Data
-   enum { IDD = IDD_ABOUTBOX };
-
 protected:
-   virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+   virtual void DoDataExchange(CDataExchange* pDX); 
    afx_msg void OnLinkClicked();
 
-   // Implementation
 protected:
-   DECLARE_MESSAGE_MAP()
-public:
-   CLink             m_link;
-   CFont             m_font;
-
+   DECLARE_MESSAGE_MAP()  
 };
+//+------------------------------------------------------------------+
