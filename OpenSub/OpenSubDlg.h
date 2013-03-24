@@ -42,7 +42,7 @@ public:
    afx_msg void      OnLbnSelchangeList2();
    afx_msg void      OnSysCommand(UINT nID,LPARAM lParam);
 private:
-   CListCtrl         m_list1;
+   CListCtrl         m_results_list_control;
 public:
    afx_msg void      OnBnClickedButton1();
    afx_msg void      OnLinkClicked();

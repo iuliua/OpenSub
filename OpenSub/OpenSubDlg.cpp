@@ -25,7 +25,7 @@ COpenSubDlg::COpenSubDlg(CWnd *pParent)
 void COpenSubDlg::DoDataExchange(CDataExchange* pDX)
   {
    CDialog::DoDataExchange(pDX);
-   DDX_Control(pDX, IDC_LIST1, m_list1);
+   DDX_Control(pDX, IDC_LIST1, m_results_list_control);
    DDX_Control(pDX, IDC_COMBO1, m_cmb_lang);
    DDX_Control(pDX, IDC_COMBO2, m_cmb_match);
    DDX_Control(pDX, IDC_BUTTON1, m_btn_download);
@@ -54,28 +54,22 @@ END_MESSAGE_MAP()
 //+------------------------------------------------------------------+
 void COpenSubDlg::InitializeList()
   {
-   m_list1.SetExtendedStyle(LVS_EX_FULLROWSELECT|LVS_EX_AUTOSIZECOLUMNS);
+   m_results_list_control.SetExtendedStyle(LVS_EX_FULLROWSELECT|LVS_EX_AUTOSIZECOLUMNS);
 
    LVCOLUMN lvColumn;
    int nCol;
 
    lvColumn.mask=LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
    lvColumn.fmt=LVCFMT_LEFT;
-   lvColumn.cx=600;
+   lvColumn.cx=75;
+   lvColumn.pszText=L"Count";
+   nCol=m_results_list_control.InsertColumn(0, &lvColumn);
+
+   lvColumn.mask=LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
+   lvColumn.fmt=LVCFMT_LEFT;
+   lvColumn.cx=750;
    lvColumn.pszText=L"Name";
-   nCol=m_list1.InsertColumn(0, &lvColumn);
-
-   lvColumn.mask=LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
-   lvColumn.fmt=LVCFMT_LEFT;
-   lvColumn.cx=100;
-   lvColumn.pszText=L"Lang";
-   m_list1.InsertColumn(1, &lvColumn);
-
-   lvColumn.mask=LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
-   lvColumn.fmt=LVCFMT_LEFT;
-   lvColumn.cx=80;
-   lvColumn.pszText=L"Match";
-   m_list1.InsertColumn(2, &lvColumn);
+   nCol=m_results_list_control.InsertColumn(1, &lvColumn);
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -134,7 +128,7 @@ BOOL COpenSubDlg::OnInitDialog()
    m_btn_play.EnableWindow(FALSE);
    m_cmb_lang.EnableWindow(FALSE);
    m_cmb_match.EnableWindow(FALSE);
-   m_list1.EnableWindow(FALSE);
+   m_results_list_control.EnableWindow(FALSE);
 //--- start searching
    AfxBeginThread(ThreadSearchSub,this);
    return(TRUE);
@@ -198,14 +192,14 @@ UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
    COpenSubDlg *dlg=(COpenSubDlg*)pvParam;
    if(!dlg->DownloadFinished())
       return(0);
-   int selected_item=dlg->m_list1.GetNextItem(-1,LVNI_SELECTED);
+   int selected_item=dlg->m_results_list_control.GetNextItem(-1,LVNI_SELECTED);
    if(selected_item==-1)
       return(0);
    InputFileInfo file_info(theApp.m_lpCmdLine);
    LVITEM item={0};
    item.mask=LVIF_PARAM;
    item.iItem=selected_item;
-   if(!dlg->m_list1.GetItem(&item))
+   if(!dlg->m_results_list_control.GetItem(&item))
       return(0);
    CString zip_exe_path=Read7ZipPath(); 
    if(zip_exe_path.IsEmpty())
@@ -328,7 +322,7 @@ LRESULT COpenSubDlg::OnSearchFinished(WPARAM wParam, LPARAM lParam)
    m_btn_play.EnableWindow(TRUE);
    m_cmb_lang.EnableWindow(TRUE);
    m_cmb_match.EnableWindow(TRUE);
-   m_list1.EnableWindow(TRUE);
+   m_results_list_control.EnableWindow(TRUE);
    return(0);
   }
 //+------------------------------------------------------------------+
@@ -403,11 +397,11 @@ void COpenSubDlg::OnCbnSelchangeCombo1()
 //+------------------------------------------------------------------+
 void COpenSubDlg::UpdateList()
   {
-   m_list1.DeleteAllItems();
+   m_results_list_control.DeleteAllItems();
    for(size_t i=0;i<m_result_list.size();i++)
      {
       OSApi::subtitle_info data=m_result_list[i];
-      int index=m_list1.GetItemCount();
+      int index=m_results_list_control.GetItemCount();
 
       int idx_lang=m_cmb_lang.GetCurSel();
       int idx_match=m_cmb_match.GetCurSel();
@@ -426,12 +420,11 @@ void COpenSubDlg::UpdateList()
       lvItem.mask=LVIF_TEXT|LVIF_PARAM;
       lvItem.iItem=index;
       lvItem.iSubItem=0;
-      lvItem.pszText=data.sub_file_name;
+      lvItem.pszText=data.sub_download_count;
       lvItem.lParam=i;
-      nItem=m_list1.InsertItem(&lvItem);
+      nItem=m_results_list_control.InsertItem(&lvItem);
 
-      m_list1.SetItemText(nItem, 1, data.lang);
-      m_list1.SetItemText(nItem, 2, data.matched_by);
+      m_results_list_control.SetItemText(nItem,1,data.sub_file_name);
      }
   }
 //+------------------------------------------------------------------+
