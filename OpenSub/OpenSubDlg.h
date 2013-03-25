@@ -44,7 +44,7 @@ public:
 private:
    CListCtrl         m_results_list_control;
 public:
-   afx_msg void      OnBnClickedButton1();
+   afx_msg void      OnBnClickedDownload();
    afx_msg void      OnLinkClicked();
    afx_msg void      OnLinkClicked2();
    CComboBox         m_cmb_lang;
@@ -54,8 +54,8 @@ public:
    CButton           m_btn_explore;
    CButton           m_btn_play;
    CLink             m_link;
-   CLink             m_link2;
-   afx_msg void      OnBnClickedButton2();
-   afx_msg void      OnBnClickedButton3();
+   CLink             m_link_websearch;
+   afx_msg void      OnBnClickedExplore();
+   afx_msg void      OnBnClickedPlay();
   };
 //+------------------------------------------------------------------+

@@ -32,7 +32,7 @@ void COpenSubDlg::DoDataExchange(CDataExchange* pDX)
    DDX_Control(pDX, IDC_BUTTON2, m_btn_explore);
    DDX_Control(pDX, IDC_BUTTON3, m_btn_play);
    DDX_Control(pDX, IDC_LINK_MAIN, m_link);
-   DDX_Control(pDX, IDC_LINK_MAIN2, m_link2);
+   DDX_Control(pDX, IDC_LINK_MAIN2, m_link_websearch);
   }
 BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_WM_PAINT()
@@ -41,11 +41,11 @@ BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
 	ON_WM_SYSCOMMAND()
    ON_MESSAGE(WM_SEARCH_FINISHED,OnSearchFinished)
    ON_MESSAGE(WM_COPYDATA,OnCopyData)
-   ON_BN_CLICKED(IDC_BUTTON1, &COpenSubDlg::OnBnClickedButton1)
+   ON_BN_CLICKED(IDC_BUTTON1, &COpenSubDlg::OnBnClickedDownload)
    ON_CBN_SELCHANGE(IDC_COMBO1, &COpenSubDlg::OnCbnSelchangeCombo1)
    ON_CBN_SELCHANGE(IDC_COMBO2, &COpenSubDlg::OnCbnSelchangeCombo1)
-   ON_BN_CLICKED(IDC_BUTTON2, &COpenSubDlg::OnBnClickedButton2)
-   ON_BN_CLICKED(IDC_BUTTON3, &COpenSubDlg::OnBnClickedButton3)
+   ON_BN_CLICKED(IDC_BUTTON2, &COpenSubDlg::OnBnClickedExplore)
+   ON_BN_CLICKED(IDC_BUTTON3, &COpenSubDlg::OnBnClickedPlay)
    ON_BN_CLICKED(IDC_LINK_MAIN,&OnLinkClicked)
    ON_BN_CLICKED(IDC_LINK_MAIN2,&OnLinkClicked2)
 END_MESSAGE_MAP()
@@ -129,6 +129,7 @@ BOOL COpenSubDlg::OnInitDialog()
    m_cmb_lang.EnableWindow(FALSE);
    m_cmb_match.EnableWindow(FALSE);
    m_results_list_control.EnableWindow(FALSE);
+   m_link_websearch.EnableWindow(FALSE);
 //--- start searching
    AfxBeginThread(ThreadSearchSub,this);
    return(TRUE);
@@ -323,6 +324,7 @@ LRESULT COpenSubDlg::OnSearchFinished(WPARAM wParam, LPARAM lParam)
    m_cmb_lang.EnableWindow(TRUE);
    m_cmb_match.EnableWindow(TRUE);
    m_results_list_control.EnableWindow(TRUE);
+   m_link_websearch.EnableWindow(TRUE);
    return(0);
   }
 //+------------------------------------------------------------------+
@@ -381,7 +383,7 @@ HCURSOR COpenSubDlg::OnQueryDragIcon()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void COpenSubDlg::OnBnClickedButton1()
+void COpenSubDlg::OnBnClickedDownload()
   {
    AfxBeginThread(ThreadDownload,this);
   }
@@ -430,7 +432,7 @@ void COpenSubDlg::UpdateList()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void COpenSubDlg::OnBnClickedButton2()
+void COpenSubDlg::OnBnClickedExplore()
   {
    InputFileInfo file_info(theApp.m_lpCmdLine);
    WCHAR command[512];
@@ -450,7 +452,7 @@ void COpenSubDlg::OnBnClickedButton2()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void COpenSubDlg::OnBnClickedButton3()
+void COpenSubDlg::OnBnClickedPlay()
 {
    InputFileInfo file_info(theApp.m_lpCmdLine);
    ShellExecute(NULL,L"open",file_info.file_full_name,0,0,SW_SHOW); 

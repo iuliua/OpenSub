@@ -20,6 +20,7 @@ InputFileInfo::InputFileInfo(LPCWSTR file_name)
    FileDirectory();
    FileNameNoExtension();
    FileSize();
+   swprintf_s(file_full_name,MAX_PATH,L"%s\\%s",file_directory,this->file_name);
    Hash();
   }
 //+------------------------------------------------------------------+
@@ -37,6 +38,12 @@ void InputFileInfo::FileDirectory()
       memcpy(file_directory,file_full_name,i*sizeof(WCHAR));
       file_directory[i]=0;
      }
+   else
+   {
+      WCHAR curr_dir[MAX_PATH]={0};
+      if(GetCurrentDirectory(MAX_PATH,curr_dir))
+         wcscpy_s(file_directory,MAX_PATH,curr_dir);
+   }
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -49,16 +56,16 @@ void InputFileInfo::FileNameNoExtension()
       if(file_full_name[i]=='\\')
          break;
    if(i>=0)
-     {
       wcscpy_s(file_name_no_extension,sizeof(file_name_no_extension)/sizeof(WCHAR),file_full_name+i+1);
-      wcscpy_s(file_name,sizeof(file_name)/sizeof(WCHAR),file_name_no_extension);
-      for(i=wcslen(file_name_no_extension)-1;i>=0;i--)
-         if(file_name_no_extension[i]=='.')
-           {
-            file_name_no_extension[i]=0;
-            break;
-           }
-     }
+   else
+      wcscpy_s(file_name_no_extension,sizeof(file_name_no_extension)/sizeof(WCHAR),file_full_name);
+   wcscpy_s(file_name,sizeof(file_name)/sizeof(WCHAR),file_name_no_extension);
+   for(i=wcslen(file_name_no_extension)-1;i>=0;i--)
+       if(file_name_no_extension[i]=='.')
+       {
+           file_name_no_extension[i]=0;
+           break;
+       }
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
