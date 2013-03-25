@@ -28,6 +28,7 @@ private:
    LRESULT           OnCopyData(WPARAM wParam, LPARAM lParam);
    static UINT       ThreadSearchSub(LPVOID pvParam);
    static UINT       ThreadDownload(LPVOID pvParam);
+   static UINT       ThreadTestSub(LPVOID pvParam);
    static void       PrintMessage(HWND handle,LPCWSTR msg);
    void              InitializeList();
    void              SetTitle();
@@ -38,11 +39,14 @@ private:
    bool              DownloadFinished() { return InterlockedExchangeAdd(&m_search_finished,0)>0; }
    void              DownloadFinished(int flag) { InterlockedExchange(&m_search_finished,flag); }
    void              UpdateList();
+   BOOL              DownloadAndUnzip(OSApi::subtitle_info &item);
+   BOOL              GetSubInfo(OSApi::subtitle_info& sub_info);
 public:
    afx_msg void      OnLbnSelchangeList2();
    afx_msg void      OnSysCommand(UINT nID,LPARAM lParam);
 private:
    CListCtrl         m_results_list_control;
+   InputFileInfo     file_info;
 public:
    afx_msg void      OnBnClickedDownload();
    afx_msg void      OnLinkClicked();

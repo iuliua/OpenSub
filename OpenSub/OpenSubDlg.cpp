@@ -15,7 +15,7 @@
 //+------------------------------------------------------------------+
 COpenSubDlg::COpenSubDlg(CWnd *pParent)
    : CDialog(COpenSubDlg::IDD, pParent)
-   , m_search_finished(1)
+   , m_search_finished(1),file_info(theApp.m_lpCmdLine)
   {
    m_hIcon=AfxGetApp()->LoadIcon(IDR_MAINFRAME);
   }
@@ -77,7 +77,6 @@ void COpenSubDlg::InitializeList()
 void COpenSubDlg::SetTitle()
   {
    CString       str;
-   InputFileInfo file_info(theApp.m_lpCmdLine);
    if(file_info.file_size[0]>0)
      {
       str.Format(L"OpenSub - %s",file_info.file_name);
@@ -188,61 +187,82 @@ CString COpenSubDlg::Read7ZipPath()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
+BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
+{
+    if(!DownloadFinished())
+        return TRUE;
+    //--- get path of 7zip executable
+    CString zip_exe_path=Read7ZipPath(); 
+    if(zip_exe_path.IsEmpty())
+    {
+        PrintMessage(GetSafeHwnd(),L"7-Zip not installed.");
+        DownloadFinished(1);
+        return FALSE;
+    }
+    //--- download archive
+    DownloadFinished(0);
+    if(URLDownloadToFile(NULL,sub_info.zip_link,L"c:\\sub.zip",0,NULL)!=S_OK)
+    {
+        PrintMessage(GetSafeHwnd(),L"Download failed.");
+        DownloadFinished(1);
+        return FALSE;
+    }
+    //--- unzip
+    WCHAR command[1024];
+    swprintf_s(command,sizeof(command)/sizeof(WCHAR),L"%s\\7z.exe e c:\\sub.zip -oc:\\ \"sub\" -y",zip_exe_path);
+    STARTUPINFO info={0};
+    info.cb=sizeof(info);
+    info.dwFlags=STARTF_USESHOWWINDOW;
+    info.wShowWindow=SW_HIDE;
+    PROCESS_INFORMATION processInfo;
+    bool unzip_result=false;
+    if (CreateProcess(NULL,command, NULL, NULL, TRUE, 0, NULL, L"C:\\", &info, &processInfo))
+    {
+        DWORD exit_code=0;
+        PrintMessage(GetSafeHwnd(),L"Unzipping...");
+        ::WaitForSingleObject(processInfo.hProcess, 5000);
+        if(GetExitCodeProcess(processInfo.hProcess,&exit_code) && exit_code ==0)
+            unzip_result=true;
+        CloseHandle(processInfo.hProcess);
+        CloseHandle(processInfo.hThread);
+    }
+    if(!unzip_result)
+    {
+        PrintMessage(GetSafeHwnd(),L"Cannot unzip file.");
+        DownloadFinished(1);
+        ::DeleteFile(L"c:\\sub.zip");
+        return FALSE;
+    }
+    return TRUE;
+}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+BOOL COpenSubDlg::GetSubInfo(OSApi::subtitle_info& sub_info)
+{
+    //--- get info on selected item
+    int selected_item=m_results_list_control.GetNextItem(-1,LVNI_SELECTED);
+    if(selected_item==-1)
+        return(FALSE);
+    LVITEM item={0};
+    item.mask=LVIF_PARAM;
+    item.iItem=selected_item;
+    if(!m_results_list_control.GetItem(&item))
+        return(FALSE);
+    sub_info=m_result_list[item.lParam];
+    return(TRUE);
+}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
   {
-   COpenSubDlg *dlg=(COpenSubDlg*)pvParam;
-   if(!dlg->DownloadFinished())
-      return(0);
-   int selected_item=dlg->m_results_list_control.GetNextItem(-1,LVNI_SELECTED);
-   if(selected_item==-1)
-      return(0);
-   InputFileInfo file_info(theApp.m_lpCmdLine);
-   LVITEM item={0};
-   item.mask=LVIF_PARAM;
-   item.iItem=selected_item;
-   if(!dlg->m_results_list_control.GetItem(&item))
-      return(0);
-   CString zip_exe_path=Read7ZipPath(); 
-   if(zip_exe_path.IsEmpty())
-   {
-     PrintMessage(dlg->GetSafeHwnd(),L"7-Zip not installed.");
-     dlg->DownloadFinished(1);
-     return(0);
-   }
-   dlg->DownloadFinished(0);
-   OSApi::subtitle_info sub_info=dlg->m_result_list[item.lParam];
-   if(URLDownloadToFile(NULL,sub_info.zip_link,L"c:\\sub.zip",0,NULL)!=S_OK)
-     {
-      PrintMessage(dlg->GetSafeHwnd(),L"Download failed.");
-      dlg->DownloadFinished(1);
-      return(0);
-     }
-//--- unzip
-   WCHAR command[1024];
-   swprintf_s(command,sizeof(command)/sizeof(WCHAR),L"%s\\7z.exe e c:\\sub.zip -oc:\\ \"sub\" -y",zip_exe_path);
-   STARTUPINFO info={0};
-   info.cb=sizeof(info);
-   info.dwFlags=STARTF_USESHOWWINDOW;
-   info.wShowWindow=SW_HIDE;
-   PROCESS_INFORMATION processInfo;
-   bool unzip_result=false;
-   if (CreateProcess(NULL,command, NULL, NULL, TRUE, 0, NULL, L"C:\\", &info, &processInfo))
-     {
-      DWORD exit_code=0;
-      PrintMessage(dlg->GetSafeHwnd(),L"Unzipping...");
-      ::WaitForSingleObject(processInfo.hProcess, 5000);
-      if(GetExitCodeProcess(processInfo.hProcess,&exit_code) && exit_code ==0)
-         unzip_result=true;
-      CloseHandle(processInfo.hProcess);
-      CloseHandle(processInfo.hThread);
-     }
-   if(!unzip_result)
-     {
-      PrintMessage(dlg->GetSafeHwnd(),L"Cannot unzip file.");
-      dlg->DownloadFinished(1);
-      ::DeleteFile(L"c:\\sub.zip");
-      return(0);
-     }
+   COpenSubDlg         *dlg=(COpenSubDlg*)pvParam;
+   InputFileInfo        &file_info=dlg->file_info;
+   OSApi::subtitle_info sub_info;
+//---
+   dlg->GetSubInfo(sub_info);
+   dlg->DownloadAndUnzip(sub_info);
 //--- rename subtitle and move to movie folder 
    WCHAR existing_location[512];
    WCHAR new_location[512];
@@ -269,12 +289,44 @@ UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
+UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
+{
+    COpenSubDlg         *dlg=(COpenSubDlg*)pvParam;
+    InputFileInfo        &file_info=dlg->file_info;
+    OSApi::subtitle_info sub_info;
+    //---
+    dlg->GetSubInfo(sub_info);
+    dlg->DownloadAndUnzip(sub_info);
+    //ShellExecute(NULL,L"open",file_info.file_full_name,0,0,SW_SHOW); 
+    //--- unzip
+    WCHAR command[1024];
+    swprintf_s(command,sizeof(command)/sizeof(WCHAR),L"C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe \"%s\" :sub-file=\"c:\\sub\"",file_info.file_full_name);
+    STARTUPINFO info={0};
+    info.cb=sizeof(info);
+    info.dwFlags=STARTF_USESHOWWINDOW;
+    info.wShowWindow=SW_SHOW;
+    PROCESS_INFORMATION processInfo;
+    bool unzip_result=false;
+    if (CreateProcess(NULL,command, NULL, NULL, TRUE, 0, NULL, L"C:\\", &info, &processInfo))
+    {
+        DWORD exit_code=0;
+        ::WaitForSingleObject(processInfo.hProcess, 5000);
+        if(GetExitCodeProcess(processInfo.hProcess,&exit_code) && exit_code ==0)
+            unzip_result=true;
+        CloseHandle(processInfo.hProcess);
+        CloseHandle(processInfo.hThread);
+    }
+    return(0);
+}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 UINT COpenSubDlg::ThreadSearchSub(LPVOID pvParam)
   {
    COpenSubDlg            *dlg=(COpenSubDlg*)pvParam;
    OSApi                   m_api(L"",L"",L"eng,rum",L"OS Test User Agent");
    OSApi::SubtitleInfoList result_list;
-   InputFileInfo           file_info(theApp.m_lpCmdLine);
+   InputFileInfo        &file_info=dlg->file_info;
    //--- validate file
    if(file_info.file_size[0]==0)
      {
@@ -426,7 +478,7 @@ void COpenSubDlg::UpdateList()
       lvItem.lParam=i;
       nItem=m_results_list_control.InsertItem(&lvItem);
 
-      m_results_list_control.SetItemText(nItem,1,data.sub_file_name);
+      m_results_list_control.SetItemText(nItem,1,data.mov_release_name);
      }
   }
 //+------------------------------------------------------------------+
@@ -434,7 +486,6 @@ void COpenSubDlg::UpdateList()
 //+------------------------------------------------------------------+
 void COpenSubDlg::OnBnClickedExplore()
   {
-   InputFileInfo file_info(theApp.m_lpCmdLine);
    WCHAR command[512];
    swprintf_s(command,sizeof(command)/sizeof(WCHAR),L"explorer /select,%s",file_info.file_full_name);
    STARTUPINFO info={0};
@@ -454,8 +505,7 @@ void COpenSubDlg::OnBnClickedExplore()
 //+------------------------------------------------------------------+
 void COpenSubDlg::OnBnClickedPlay()
 {
-   InputFileInfo file_info(theApp.m_lpCmdLine);
-   ShellExecute(NULL,L"open",file_info.file_full_name,0,0,SW_SHOW); 
+   AfxBeginThread(ThreadTestSub,this);
 }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -469,8 +519,6 @@ void COpenSubDlg::OnLinkClicked()
 //+------------------------------------------------------------------+
 void COpenSubDlg::OnLinkClicked2()
 {
-   InputFileInfo file_info(theApp.m_lpCmdLine);
-   
    int idx_lang=m_cmb_lang.GetCurSel();
    int idx_match=m_cmb_match.GetCurSel();
    if(idx_lang>=0&&idx_match>=0)
