@@ -260,9 +260,12 @@ UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
    COpenSubDlg         *dlg=(COpenSubDlg*)pvParam;
    InputFileInfo        &file_info=dlg->file_info;
    OSApi::subtitle_info sub_info;
-//---
-   dlg->GetSubInfo(sub_info);
-   dlg->DownloadAndUnzip(sub_info);
+//--- get selected item
+   if(!dlg->GetSubInfo(sub_info))
+       return FALSE;
+   //--- download and unzip subtitle to c:\sub file
+   if(!dlg->DownloadAndUnzip(sub_info))
+       return FALSE;
 //--- rename subtitle and move to movie folder 
    WCHAR existing_location[512];
    WCHAR new_location[512];
@@ -294,10 +297,13 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
     COpenSubDlg         *dlg=(COpenSubDlg*)pvParam;
     InputFileInfo        &file_info=dlg->file_info;
     OSApi::subtitle_info sub_info;
-    //---
-    dlg->GetSubInfo(sub_info);
-    dlg->DownloadAndUnzip(sub_info);
-    //ShellExecute(NULL,L"open",file_info.file_full_name,0,0,SW_SHOW); 
+    //--- get selected item
+    if(!dlg->GetSubInfo(sub_info))
+        return FALSE;
+    //--- download and unzip subtitle to c:\sub file
+    if(!dlg->DownloadAndUnzip(sub_info))
+        return FALSE;
+    dlg->m_btn_play.EnableWindow(FALSE);
     //--- unzip
     WCHAR command[1024];
     swprintf_s(command,sizeof(command)/sizeof(WCHAR),L"C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe \"%s\" :sub-file=\"c:\\sub\"",file_info.file_full_name);
@@ -309,13 +315,15 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
     bool unzip_result=false;
     if (CreateProcess(NULL,command, NULL, NULL, TRUE, 0, NULL, L"C:\\", &info, &processInfo))
     {
-        DWORD exit_code=0;
-        ::WaitForSingleObject(processInfo.hProcess, 5000);
-        if(GetExitCodeProcess(processInfo.hProcess,&exit_code) && exit_code ==0)
-            unzip_result=true;
+        dlg->PrintMessage(dlg->GetSafeHwnd(),L"Playing");
+        ::WaitForSingleObject(processInfo.hProcess,INFINITE);      
+        dlg->m_btn_play.EnableWindow(TRUE);
+        dlg->PrintMessage(dlg->GetSafeHwnd(),L"");
         CloseHandle(processInfo.hProcess);
         CloseHandle(processInfo.hThread);
     }
+    else
+        dlg->PrintMessage(dlg->GetSafeHwnd(),L"failed to start VLC");
     return(0);
 }
 //+------------------------------------------------------------------+
