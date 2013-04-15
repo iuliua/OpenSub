@@ -199,6 +199,8 @@ BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
         DownloadFinished(1);
         return FALSE;
     }
+    ::DeleteFile(L"C:\\sub.zip");
+    ::DeleteFile(L"C:\\sub");
     //--- download archive
     DownloadFinished(0);
     if(URLDownloadToFile(NULL,sub_info.zip_link,L"c:\\sub.zip",0,NULL)!=S_OK)
@@ -317,13 +319,13 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
     {
         dlg->PrintMessage(dlg->GetSafeHwnd(),L"Playing");
         ::WaitForSingleObject(processInfo.hProcess,INFINITE);      
-        dlg->m_btn_play.EnableWindow(TRUE);
         dlg->PrintMessage(dlg->GetSafeHwnd(),L"");
         CloseHandle(processInfo.hProcess);
         CloseHandle(processInfo.hThread);
     }
     else
         dlg->PrintMessage(dlg->GetSafeHwnd(),L"failed to start VLC");
+    dlg->m_btn_play.EnableWindow(TRUE);
     return(0);
 }
 //+------------------------------------------------------------------+
