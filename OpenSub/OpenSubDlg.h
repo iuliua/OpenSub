@@ -12,6 +12,11 @@ public:
                      COpenSubDlg(CWnd *pParent=NULL);
 
    enum { IDD=IDD_OPENSUB_DIALOG };
+   enum EnMsgType
+   {
+       MESSAGE_NORMAL,
+       MESSAGE_ERROR
+   };
 
 protected:
    virtual void      DoDataExchange(CDataExchange* pDX);
@@ -29,7 +34,7 @@ private:
    static UINT       ThreadSearchSub(LPVOID pvParam);
    static UINT       ThreadDownload(LPVOID pvParam);
    static UINT       ThreadTestSub(LPVOID pvParam);
-   static void       PrintMessage(HWND handle,LPCWSTR msg);
+   static void       PrintMessage(HWND handle,LPCWSTR msg,EnMsgType msg_type=MESSAGE_NORMAL);
    void              InitializeList();
    void              SetTitle();
    static CString    Read7ZipPath();
@@ -47,6 +52,7 @@ public:
 private:
    CListCtrl         m_results_list_control;
    InputFileInfo     file_info;
+   bool              m_error_detected;
 public:
    afx_msg void      OnBnClickedDownload();
    afx_msg void      OnLinkClicked();

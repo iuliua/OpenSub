@@ -31,7 +31,6 @@
 
 using namespace pugi;
 #define WM_SEARCH_FINISHED    WM_APP + 0x10
-#define PRINT_MESSAGE 1
 
 #ifndef _AFX_NO_OLE_SUPPORT
 #include <afxdtctl.h>           // MFC support for Internet Explorer 4 Common Controls

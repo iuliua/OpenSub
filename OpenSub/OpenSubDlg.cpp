@@ -15,7 +15,7 @@
 //+------------------------------------------------------------------+
 COpenSubDlg::COpenSubDlg(CWnd *pParent)
    : CDialog(COpenSubDlg::IDD, pParent)
-   , m_search_finished(1),file_info(theApp.m_lpCmdLine)
+   , m_search_finished(1),file_info(theApp.m_lpCmdLine),m_error_detected(false)
   {
    m_hIcon=AfxGetApp()->LoadIcon(IDR_MAINFRAME);
   }
@@ -136,10 +136,10 @@ BOOL COpenSubDlg::OnInitDialog()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void COpenSubDlg::PrintMessage(HWND handle,LPCWSTR msg)
+void COpenSubDlg::PrintMessage(HWND handle,LPCWSTR msg,EnMsgType msg_type)
   {
    COPYDATASTRUCT cds;
-   cds.dwData=PRINT_MESSAGE;
+   cds.dwData=msg_type;
    cds.cbData=(wcslen(msg)+1)*sizeof(WCHAR);
    cds.lpData=(PVOID)msg;
    ::SendMessage(handle,WM_COPYDATA,0,(LPARAM)(LPVOID)&cds);
@@ -152,8 +152,11 @@ LRESULT COpenSubDlg::OnCopyData(WPARAM wParam, LPARAM lParam)
     PCOPYDATASTRUCT pcds=(PCOPYDATASTRUCT)lParam;
     switch(pcds->dwData)
     {
-    case PRINT_MESSAGE:
-        GetDlgItem(IDC_STATIC)->SetWindowText((LPCWSTR)pcds->lpData);
+    case MESSAGE_ERROR:
+        m_error_detected=true;
+    case MESSAGE_NORMAL:
+        if(!m_error_detected)
+          GetDlgItem(IDC_STATIC)->SetWindowText((LPCWSTR)pcds->lpData);
         break;
     }
     return(0);
@@ -195,7 +198,7 @@ BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
     CString zip_exe_path=Read7ZipPath(); 
     if(zip_exe_path.IsEmpty())
     {
-        PrintMessage(GetSafeHwnd(),L"7-Zip not installed.");
+        PrintMessage(GetSafeHwnd(),L"7-Zip not installed.",MESSAGE_ERROR);
         DownloadFinished(1);
         return FALSE;
     }
@@ -205,7 +208,7 @@ BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
     DownloadFinished(0);
     if(URLDownloadToFile(NULL,sub_info.zip_link,L"c:\\sub.zip",0,NULL)!=S_OK)
     {
-        PrintMessage(GetSafeHwnd(),L"Download failed.");
+        PrintMessage(GetSafeHwnd(),L"Download failed.",MESSAGE_ERROR);
         DownloadFinished(1);
         return FALSE;
     }
@@ -230,7 +233,7 @@ BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
     }
     if(!unzip_result)
     {
-        PrintMessage(GetSafeHwnd(),L"Cannot unzip file.");
+        PrintMessage(GetSafeHwnd(),L"Cannot unzip file.",MESSAGE_ERROR);
         DownloadFinished(1);
         ::DeleteFile(L"c:\\sub.zip");
         return FALSE;
@@ -275,7 +278,7 @@ UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
    swprintf_s(new_location,sizeof(existing_location)/sizeof(WCHAR),L"%s\\%s.%s",file_info.file_directory,file_info.file_name_no_extension,sub_info.sub_format);
    if(GetFileAttributes(new_location)!=INVALID_FILE_ATTRIBUTES && !::DeleteFile(new_location))
      {
-      PrintMessage(dlg->GetSafeHwnd(),L"Cannot delete target file.");
+      PrintMessage(dlg->GetSafeHwnd(),L"Cannot delete target file.",MESSAGE_ERROR);
       ::DeleteFile(L"c:\\sub.zip");
       ::DeleteFile(existing_location);
       dlg->DownloadFinished(1);
@@ -283,7 +286,7 @@ UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
      }
    PrintMessage(dlg->GetSafeHwnd(),L"Moving file...");
    if(!::MoveFile(existing_location,new_location))
-      PrintMessage(dlg->GetSafeHwnd(),L"Cannot move file.");
+      PrintMessage(dlg->GetSafeHwnd(),L"Cannot move file.",MESSAGE_ERROR);
    else
       PrintMessage(dlg->GetSafeHwnd(),L"Done.");
    ::DeleteFile(L"c:\\sub.zip");
@@ -324,7 +327,7 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
         CloseHandle(processInfo.hThread);
     }
     else
-        dlg->PrintMessage(dlg->GetSafeHwnd(),L"failed to start VLC");
+        dlg->PrintMessage(dlg->GetSafeHwnd(),L"failed to start VLC",MESSAGE_ERROR);
     dlg->m_btn_play.EnableWindow(TRUE);
     return(0);
 }
@@ -340,25 +343,25 @@ UINT COpenSubDlg::ThreadSearchSub(LPVOID pvParam)
    //--- validate file
    if(file_info.file_size[0]==0)
      {
-      PrintMessage(dlg->GetSafeHwnd(),L"Invalid input file.");
+      PrintMessage(dlg->GetSafeHwnd(),L"Invalid input file.",MESSAGE_ERROR);
       return(0);
      }
    //--- validate api object
    if(!m_api.IsValid())
    {
-       PrintMessage(dlg->GetSafeHwnd(),L"Failed to start api.");
+       PrintMessage(dlg->GetSafeHwnd(),L"Failed to start api.",MESSAGE_ERROR);
        return(0);
    }
    PrintMessage(dlg->GetSafeHwnd(),L"Logging in...");
    if(!m_api.Login())
      {
-      PrintMessage(dlg->GetSafeHwnd(),L"Log in failed.");
+      PrintMessage(dlg->GetSafeHwnd(),L"Log in failed.",MESSAGE_ERROR);
       return(0);
      }
    PrintMessage(dlg->GetSafeHwnd(),L"Searching...");
    if(!m_api.SearchSubtitle(file_info.file_name_no_extension,file_info.file_size,file_info.file_hash,result_list))
      {
-      PrintMessage(dlg->GetSafeHwnd(),L"Search failed.");
+      PrintMessage(dlg->GetSafeHwnd(),L"Search failed.",MESSAGE_ERROR);
       return(0);
      }
    dlg->m_result_list=result_list;
@@ -366,7 +369,7 @@ UINT COpenSubDlg::ThreadSearchSub(LPVOID pvParam)
    PrintMessage(dlg->GetSafeHwnd(),L"Logging out...");
    if(!m_api.Logout())
      {
-      PrintMessage(dlg->GetSafeHwnd(),L"Log out failed.");
+      PrintMessage(dlg->GetSafeHwnd(),L"Log out failed.",MESSAGE_ERROR);
       return(0);
      }
    CString    strText;
