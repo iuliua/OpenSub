@@ -212,6 +212,7 @@ BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
         DownloadFinished(1);
         return FALSE;
     }
+    DownloadFinished(1);
     //--- unzip
     WCHAR command[1024];
     swprintf_s(command,sizeof(command)/sizeof(WCHAR),L"%s\\7z.exe e c:\\sub.zip -oc:\\ \"sub\" -y",zip_exe_path);
@@ -309,7 +310,6 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
     if(!dlg->DownloadAndUnzip(sub_info))
         return FALSE;
     dlg->m_btn_play.EnableWindow(FALSE);
-    //--- unzip
     WCHAR command[1024];
     swprintf_s(command,sizeof(command)/sizeof(WCHAR),L"C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe \"%s\" :sub-file=\"c:\\sub\"",file_info.file_full_name);
     STARTUPINFO info={0};
