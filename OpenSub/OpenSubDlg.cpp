@@ -14,8 +14,9 @@
 //|                                                                  |
 //+------------------------------------------------------------------+
 COpenSubDlg::COpenSubDlg(CWnd *pParent)
-   : CDialog(COpenSubDlg::IDD, pParent)
-   , m_search_finished(1),file_info(theApp.m_lpCmdLine),m_error_detected(false)
+   : CDialog(COpenSubDlg::IDD, pParent),
+     file_info(theApp.m_lpCmdLine),
+     m_error_detected(false)
   {
    m_hIcon=AfxGetApp()->LoadIcon(IDR_MAINFRAME);
   }
@@ -192,27 +193,21 @@ CString COpenSubDlg::Read7ZipPath()
 //+------------------------------------------------------------------+
 BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
 {
-    if(!DownloadFinished())
-        return TRUE;
     //--- get path of 7zip executable
     CString zip_exe_path=Read7ZipPath(); 
     if(zip_exe_path.IsEmpty())
     {
         PrintMessage(GetSafeHwnd(),L"7-Zip not installed.",MESSAGE_ERROR);
-        DownloadFinished(1);
         return FALSE;
     }
     ::DeleteFile(L"C:\\sub.zip");
     ::DeleteFile(L"C:\\sub");
     //--- download archive
-    DownloadFinished(0);
     if(URLDownloadToFile(NULL,sub_info.zip_link,L"c:\\sub.zip",0,NULL)!=S_OK)
     {
         PrintMessage(GetSafeHwnd(),L"Download failed.",MESSAGE_ERROR);
-        DownloadFinished(1);
         return FALSE;
     }
-    DownloadFinished(1);
     //--- unzip
     WCHAR command[1024];
     swprintf_s(command,sizeof(command)/sizeof(WCHAR),L"%s\\7z.exe e c:\\sub.zip -oc:\\ \"sub\" -y",zip_exe_path);
@@ -235,7 +230,6 @@ BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
     if(!unzip_result)
     {
         PrintMessage(GetSafeHwnd(),L"Cannot unzip file.",MESSAGE_ERROR);
-        DownloadFinished(1);
         ::DeleteFile(L"c:\\sub.zip");
         return FALSE;
     }
@@ -282,7 +276,6 @@ UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
       PrintMessage(dlg->GetSafeHwnd(),L"Cannot delete target file.",MESSAGE_ERROR);
       ::DeleteFile(L"c:\\sub.zip");
       ::DeleteFile(existing_location);
-      dlg->DownloadFinished(1);
       return(0);
      }
    PrintMessage(dlg->GetSafeHwnd(),L"Moving file...");
@@ -292,7 +285,6 @@ UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
       PrintMessage(dlg->GetSafeHwnd(),L"Done.");
    ::DeleteFile(L"c:\\sub.zip");
    ::DeleteFile(existing_location);
-   dlg->DownloadFinished(1);
    return(0);
   }
 //+------------------------------------------------------------------+

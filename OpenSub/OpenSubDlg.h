@@ -40,9 +40,6 @@ private:
    static CString    Read7ZipPath();
 private:
    OSApi::SubtitleInfoList m_result_list;
-   volatile long     m_search_finished;
-   bool              DownloadFinished() { return InterlockedExchangeAdd(&m_search_finished,0)>0; }
-   void              DownloadFinished(int flag) { InterlockedExchange(&m_search_finished,flag); }
    void              UpdateList();
    BOOL              DownloadAndUnzip(OSApi::subtitle_info &item);
    BOOL              GetSubInfo(OSApi::subtitle_info& sub_info);
