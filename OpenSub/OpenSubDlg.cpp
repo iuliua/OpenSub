@@ -202,7 +202,7 @@ BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
     }
     ::DeleteFile(L"C:\\sub.zip");
     ::DeleteFile(L"C:\\sub");
-    //--- download archive
+    //--- download packed subtitles
     if(URLDownloadToFile(NULL,sub_info.zip_link,L"c:\\sub.zip",0,NULL)!=S_OK)
     {
         PrintMessage(GetSafeHwnd(),L"Download failed.",MESSAGE_ERROR);
@@ -220,7 +220,7 @@ BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
     if (CreateProcess(NULL,command, NULL, NULL, TRUE, 0, NULL, L"C:\\", &info, &processInfo))
     {
         DWORD exit_code=0;
-        PrintMessage(GetSafeHwnd(),L"Unzipping...");
+        PrintMessage(GetSafeHwnd(),L"Unpacking...");
         ::WaitForSingleObject(processInfo.hProcess, 5000);
         if(GetExitCodeProcess(processInfo.hProcess,&exit_code) && exit_code ==0)
             unzip_result=true;
