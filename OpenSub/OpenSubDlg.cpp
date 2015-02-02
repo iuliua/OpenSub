@@ -329,7 +329,7 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
 UINT COpenSubDlg::ThreadSearchSub(LPVOID pvParam)
   {
    COpenSubDlg            *dlg=(COpenSubDlg*)pvParam;
-   OSApi                   m_api(L"",L"",L"eng,rum",L"OS Test User Agent");
+   OSApi                   m_api(L"",L"",L"eng,rum",L"OSTestUserAgent");
    OSApi::SubtitleInfoList result_list;
    InputFileInfo        &file_info=dlg->file_info;
    //--- validate file
