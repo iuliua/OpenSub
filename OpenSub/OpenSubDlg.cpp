@@ -303,7 +303,8 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
         return FALSE;
     dlg->m_btn_play.EnableWindow(FALSE);
     WCHAR command[1024];
-    swprintf_s(command,sizeof(command)/sizeof(WCHAR),L"C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe \"%s\" :sub-file=\"c:\\sub\"",file_info.file_full_name);
+    //swprintf_s(command,sizeof(command)/sizeof(WCHAR),L"C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe \"%s\" :sub-file=\"c:\\sub\"",file_info.file_full_name);
+	swprintf_s(command, sizeof(command) / sizeof(WCHAR), L"\"%s\"", file_info.file_full_name);
     STARTUPINFO info={0};
     info.cb=sizeof(info);
     info.dwFlags=STARTF_USESHOWWINDOW;
