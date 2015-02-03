@@ -337,6 +337,8 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
 		dlg->PrintMessage(dlg->GetSafeHwnd(), L"failed to open video", MESSAGE_ERROR);
 
     dlg->m_btn_play.EnableWindow(TRUE);
+	::DeleteFile(L"C:\\sub.zip");
+	::DeleteFile(L"C:\\sub");
     return(0);
 }
 //+------------------------------------------------------------------+
