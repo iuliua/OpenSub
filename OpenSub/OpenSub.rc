@@ -16,13 +16,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -77,31 +75,31 @@ IDR_MAINFRAME           ICON                    "..\\Images\\favicon.ico"
 // Dialog
 //
 
-IDD_OPENSUB_DIALOG DIALOGEX 0, 0, 454, 199
+IDD_OPENSUB_DIALOG DIALOGEX 0, 0, 359, 189
 STYLE DS_ABSALIGN | DS_SETFONT | DS_MODALFRAME | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "OpenSub"
-FONT 10, "Microsoft Sans Serif", 400, 0, 0x0
+FONT 9, "Trebuchet MS", 400, 0, 0x0
 BEGIN
     PUSHBUTTON      "Download",IDC_BUTTON1,7,7,50,14
     PUSHBUTTON      "Test",IDC_BUTTON3,58,7,50,14
     PUSHBUTTON      "Explore",IDC_BUTTON2,109,7,50,14
-    COMBOBOX        IDC_COMBO1,332,7,32,41,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_COMBO2,364,7,50,41,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CTEXT           "web results",IDC_LINK_MAIN2,415,7,36,12,SS_NOTIFY | SS_CENTERIMAGE
-    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,24,444,161
-    CONTROL         "",IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | SS_CENTERIMAGE | WS_GROUP,7,185,185,9
-    CTEXT           "www.opensubtitles.org",IDC_LINK_MAIN,382,185,69,9,SS_NOTIFY | SS_CENTERIMAGE
+    COMBOBOX        IDC_COMBO1,182,7,32,41,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO2,214,7,50,41,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    CTEXT           "web results",IDC_LINK_MAIN2,310,7,46,12,SS_NOTIFY | SS_CENTERIMAGE
+    CONTROL         "",IDC_LIST1,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,34,349,148
+    CONTROL         "",IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | SS_CENTERIMAGE | WS_GROUP,7,21,152,9
+    CTEXT           "www.opensubtitles.org",IDC_LINK_MAIN,272,21,84,9,SS_NOTIFY | SS_CENTERIMAGE
 END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 141, 124
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+FONT 8, "Trebuchet MS", 400, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,41,98,50,14
-    CONTROL         135,IDC_STATIC,"Static",SS_BITMAP,7,49,121,32,WS_EX_STATICEDGE
-    ICON            IDR_MAINFRAME,IDC_STATIC,55,7,20,20
+    CONTROL         IDB_BITMAP1,IDC_STATIC,"Static",SS_BITMAP,7,49,121,32,WS_EX_STATICEDGE
+    ICON            IDR_MAINFRAME,IDC_STATIC,55,7,21,16
     LTEXT           "OpenSub 2.5b",IDC_STATIC,43,29,47,8
     LTEXT           "Iuliu Atudosiei",IDC_STATIC,43,39,46,8
     LTEXT           "Powered by OpenSubtitles",IDC_LINK,25,84,86,8,SS_NOTIFY
@@ -153,14 +151,14 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_OPENSUB_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 451
+        RIGHTMARGIN, 356
         TOPMARGIN, 7
-        BOTTOMMARGIN, 194
+        BOTTOMMARGIN, 184
     END
 
     IDD_ABOUTBOX, DIALOG
@@ -186,12 +184,12 @@ IDB_BITMAP1             BITMAP                  "..\\Images\\logo.bmp"
 // String Table
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_ABOUTBOX            "About OpenSub"
 END
 
-#endif    // English (U.S.) resources
+#endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
