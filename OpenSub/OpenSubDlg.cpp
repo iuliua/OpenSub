@@ -156,7 +156,7 @@ LRESULT COpenSubDlg::OnCopyData(WPARAM wParam, LPARAM lParam)
     case MESSAGE_ERROR:
         m_error_detected=true;
     case MESSAGE_NORMAL:
-        if(!m_error_detected)
+        //if(!m_error_detected)
           GetDlgItem(IDC_STATIC)->SetWindowText((LPCWSTR)pcds->lpData);
         break;
     }
@@ -295,33 +295,38 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
     COpenSubDlg         *dlg=(COpenSubDlg*)pvParam;
     InputFileInfo        &file_info=dlg->file_info;
     OSApi::subtitle_info sub_info;
+    WCHAR                command[1024];
     //--- get selected item
     if(!dlg->GetSubInfo(sub_info))
         return FALSE;
     //--- download and unzip subtitle to c:\sub file
     if(!dlg->DownloadAndUnzip(sub_info))
         return FALSE;
-    dlg->m_btn_play.EnableWindow(FALSE);
-    WCHAR command[1024];
-    //swprintf_s(command,sizeof(command)/sizeof(WCHAR),L"C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe \"%s\" :sub-file=\"c:\\sub\"",file_info.file_full_name);
+    
 	swprintf_s(command, sizeof(command) / sizeof(WCHAR), L"\"%s\"", file_info.file_full_name);
-    STARTUPINFO info={0};
-    info.cb=sizeof(info);
-    info.dwFlags=STARTF_USESHOWWINDOW;
-    info.wShowWindow=SW_SHOW;
-    PROCESS_INFORMATION processInfo;
-    bool unzip_result=false;
-    if (CreateProcess(NULL,command, NULL, NULL, TRUE, 0, NULL, L"C:\\", &info, &processInfo))
-    {
-        dlg->PrintMessage(dlg->GetSafeHwnd(),L"Playing");
-        ::WaitForSingleObject(processInfo.hProcess,INFINITE);      
-        dlg->PrintMessage(dlg->GetSafeHwnd(),L"");
-        CloseHandle(processInfo.hProcess);
-        CloseHandle(processInfo.hThread);
-    }
-    else
-        dlg->PrintMessage(dlg->GetSafeHwnd(),L"failed to start VLC",MESSAGE_ERROR);
-    dlg->m_btn_play.EnableWindow(TRUE);
+
+	SHELLEXECUTEINFO sh_exec_info = { 0 };
+	sh_exec_info.cbSize = sizeof(SHELLEXECUTEINFO);
+	sh_exec_info.fMask = SEE_MASK_NOCLOSEPROCESS;
+	sh_exec_info.hwnd = NULL;
+	sh_exec_info.lpVerb = L"open";
+	sh_exec_info.lpFile = command;
+	sh_exec_info.lpParameters = L"";
+	sh_exec_info.lpDirectory = NULL;
+	sh_exec_info.nShow = SW_SHOW;
+	sh_exec_info.hInstApp = NULL;
+	if (ShellExecuteEx(&sh_exec_info))
+	{
+		dlg->m_btn_play.EnableWindow(FALSE);
+		dlg->PrintMessage(dlg->GetSafeHwnd(), L"Playing...");
+		::WaitForSingleObject(sh_exec_info.hProcess, INFINITE);
+		dlg->PrintMessage(dlg->GetSafeHwnd(), L"");
+		CloseHandle(sh_exec_info.hProcess);
+        dlg->m_btn_play.EnableWindow(TRUE);
+	}
+	else
+		dlg->PrintMessage(dlg->GetSafeHwnd(), L"failed to open video", MESSAGE_ERROR);
+
     return(0);
 }
 //+------------------------------------------------------------------+
