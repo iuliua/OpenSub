@@ -19,7 +19,17 @@ BOOL CAboutDlg::OnInitDialog()
 //+------------------------------------------------------------------+
 void CAboutDlg::OnLinkClicked()
 {
-  ShellExecute(NULL,L"open",L"http://www.opensubtitles.org",NULL,NULL,SW_SHOW);
+  SHELLEXECUTEINFO sh_exec_info = { 0 };
+  sh_exec_info.cbSize = sizeof(SHELLEXECUTEINFO);
+  sh_exec_info.fMask = 0;
+  sh_exec_info.hwnd = NULL;
+  sh_exec_info.lpVerb = NULL;
+  sh_exec_info.lpFile = L"http://www.opensubtitles.org";
+  sh_exec_info.lpParameters = L"";
+  sh_exec_info.lpDirectory = NULL;
+  sh_exec_info.nShow = SW_SHOWNORMAL;
+  sh_exec_info.hInstApp = NULL;
+  ShellExecuteEx(&sh_exec_info);
   return;
 }
 //+------------------------------------------------------------------+

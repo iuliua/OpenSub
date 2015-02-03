@@ -263,9 +263,13 @@ UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
 //--- get selected item
    if(!dlg->GetSubInfo(sub_info))
        return FALSE;
+   dlg->m_btn_download.EnableWindow(FALSE);
    //--- download and unzip subtitle to c:\sub file
-   if(!dlg->DownloadAndUnzip(sub_info))
-       return FALSE;
+   if (!dlg->DownloadAndUnzip(sub_info))
+   {
+	   dlg->m_btn_download.EnableWindow(TRUE);
+	   return FALSE;
+   }
 //--- rename subtitle and move to movie folder 
    WCHAR existing_location[512];
    WCHAR new_location[512];
@@ -276,6 +280,7 @@ UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
       PrintMessage(dlg->GetSafeHwnd(),L"Cannot delete target file.",MESSAGE_ERROR);
       ::DeleteFile(L"c:\\sub.zip");
       ::DeleteFile(existing_location);
+	  dlg->m_btn_download.EnableWindow(TRUE);
       return(0);
      }
    PrintMessage(dlg->GetSafeHwnd(),L"Moving file...");
@@ -285,6 +290,7 @@ UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
       PrintMessage(dlg->GetSafeHwnd(),L"Done.");
    ::DeleteFile(L"c:\\sub.zip");
    ::DeleteFile(existing_location);
+   dlg->m_btn_download.EnableWindow(TRUE);
    return(0);
   }
 //+------------------------------------------------------------------+
@@ -299,10 +305,15 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
     //--- get selected item
     if(!dlg->GetSubInfo(sub_info))
         return FALSE;
+    dlg->m_btn_play.EnableWindow(FALSE);
     //--- download and unzip subtitle to c:\sub file
-    if(!dlg->DownloadAndUnzip(sub_info))
-        return FALSE;
+	if (!dlg->DownloadAndUnzip(sub_info))
+	{
+		dlg->m_btn_play.EnableWindow(TRUE);
+		return FALSE;
+	}
     
+
 	swprintf_s(command, sizeof(command) / sizeof(WCHAR), L"\"%s\"", file_info.file_full_name);
 
 	SHELLEXECUTEINFO sh_exec_info = { 0 };
@@ -317,16 +328,15 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
 	sh_exec_info.hInstApp = NULL;
 	if (ShellExecuteEx(&sh_exec_info))
 	{
-		dlg->m_btn_play.EnableWindow(FALSE);
 		dlg->PrintMessage(dlg->GetSafeHwnd(), L"Playing...");
 		::WaitForSingleObject(sh_exec_info.hProcess, INFINITE);
 		dlg->PrintMessage(dlg->GetSafeHwnd(), L"");
 		CloseHandle(sh_exec_info.hProcess);
-        dlg->m_btn_play.EnableWindow(TRUE);
 	}
 	else
 		dlg->PrintMessage(dlg->GetSafeHwnd(), L"failed to open video", MESSAGE_ERROR);
 
+    dlg->m_btn_play.EnableWindow(TRUE);
     return(0);
 }
 //+------------------------------------------------------------------+
@@ -523,7 +533,17 @@ void COpenSubDlg::OnBnClickedPlay()
 //+------------------------------------------------------------------+
 void COpenSubDlg::OnLinkClicked()
 {
-   ShellExecute(NULL,L"open",L"http://www.opensubtitles.org",NULL,NULL,SW_SHOW);
+   SHELLEXECUTEINFO sh_exec_info = { 0 };
+   sh_exec_info.cbSize = sizeof(SHELLEXECUTEINFO);
+   sh_exec_info.fMask = 0;
+   sh_exec_info.hwnd = NULL;
+   sh_exec_info.lpVerb = NULL;
+   sh_exec_info.lpFile = L"http://www.opensubtitles.org";
+   sh_exec_info.lpParameters = L"";
+   sh_exec_info.lpDirectory = NULL;
+   sh_exec_info.nShow = SW_SHOWNORMAL;
+   sh_exec_info.hInstApp = NULL;
+   ShellExecuteEx(&sh_exec_info);
 }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -542,7 +562,17 @@ void COpenSubDlg::OnLinkClicked2()
          str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviename-%s",(LPCWSTR)str_lang,file_info.file_name_no_extension);
       if(wcscmp(str_match,L"moviehash")==0)
          str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviebytesize-%s/moviehash-%s",(LPCWSTR)str_lang,file_info.file_size,file_info.file_hash);
-      ShellExecute(NULL,L"open",str,NULL,NULL,SW_SHOW);
+	  SHELLEXECUTEINFO sh_exec_info = { 0 };
+	  sh_exec_info.cbSize = sizeof(SHELLEXECUTEINFO);
+	  sh_exec_info.fMask = 0;
+	  sh_exec_info.hwnd = NULL;
+	  sh_exec_info.lpVerb = NULL;
+	  sh_exec_info.lpFile = str;
+	  sh_exec_info.lpParameters = L"";
+	  sh_exec_info.lpDirectory = NULL;
+	  sh_exec_info.nShow = SW_SHOWNORMAL;
+	  sh_exec_info.hInstApp = NULL;
+	  ShellExecuteEx(&sh_exec_info);
    }
 }
 //+------------------------------------------------------------------+
