@@ -25,16 +25,16 @@ COpenSubDlg::COpenSubDlg(CWnd *pParent)
 //+------------------------------------------------------------------+
 void COpenSubDlg::DoDataExchange(CDataExchange* pDX)
   {
-   CDialog::DoDataExchange(pDX);
-   DDX_Control(pDX, IDC_LIST1, m_results_list_control);
-   DDX_Control(pDX, IDC_COMBO1, m_cmb_lang);
-   DDX_Control(pDX, IDC_COMBO2, m_cmb_match);
-   DDX_Control(pDX, IDC_BUTTON1, m_btn_download);
-   DDX_Control(pDX, IDC_BUTTON2, m_btn_explore);
-   DDX_Control(pDX, IDC_BUTTON3, m_btn_play);
-   DDX_Control(pDX, IDC_LINK_MAIN, m_link);
-   DDX_Control(pDX, IDC_LINK_MAIN2, m_link_websearch);
-  }
+	  CDialog::DoDataExchange(pDX);
+	  DDX_Control(pDX, IDC_LIST1, m_results_list_control);
+	  DDX_Control(pDX, IDC_COMBO2, m_cmb_match);
+	  DDX_Control(pDX, IDC_BUTTON1, m_btn_download);
+	  DDX_Control(pDX, IDC_BUTTON2, m_btn_explore);
+	  DDX_Control(pDX, IDC_BUTTON3, m_btn_play);
+	  DDX_Control(pDX, IDC_LINK_MAIN, m_link);
+	  DDX_Control(pDX, IDC_LINK_MAIN2, m_link_websearch);
+	  DDX_Control(pDX, IDC_EDIT1, m_edit_lang);
+}
 BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_WM_PAINT()
    ON_WM_QUERYDRAGICON()
@@ -117,16 +117,14 @@ BOOL COpenSubDlg::OnInitDialog()
    SetTitle();
 //--- create list columns
    InitializeList();
-   m_cmb_lang.AddString(L"eng");
-   m_cmb_lang.AddString(L"rum");
-   m_cmb_lang.SetCurSel(0);
+   m_edit_lang.SetWindowText(L"eng");
    m_cmb_match.AddString(L"moviehash");
    m_cmb_match.AddString(L"fulltext");
    m_cmb_match.SetCurSel(1);
    m_btn_download.EnableWindow(FALSE);
    m_btn_explore.EnableWindow(FALSE);
    m_btn_play.EnableWindow(FALSE);
-   m_cmb_lang.EnableWindow(FALSE);
+   m_edit_lang.EnableWindow(FALSE);
    m_cmb_match.EnableWindow(FALSE);
    m_results_list_control.EnableWindow(FALSE);
    m_link_websearch.EnableWindow(FALSE);
@@ -347,7 +345,7 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
 UINT COpenSubDlg::ThreadSearchSub(LPVOID pvParam)
   {
    COpenSubDlg            *dlg=(COpenSubDlg*)pvParam;
-   OSApi                   m_api(L"",L"",L"eng,rum",L"OSTestUserAgent");
+   OSApi                   m_api(L"",L"",L"eng",L"JulianOS");
    OSApi::SubtitleInfoList result_list;
    InputFileInfo        &file_info=dlg->file_info;
    //--- validate file
@@ -396,7 +394,7 @@ LRESULT COpenSubDlg::OnSearchFinished(WPARAM wParam, LPARAM lParam)
    m_btn_download.EnableWindow(TRUE);
    m_btn_explore.EnableWindow(TRUE);
    m_btn_play.EnableWindow(TRUE);
-   m_cmb_lang.EnableWindow(TRUE);
+   m_edit_lang.EnableWindow(TRUE);
    m_cmb_match.EnableWindow(TRUE);
    m_results_list_control.EnableWindow(TRUE);
    m_link_websearch.EnableWindow(TRUE);
@@ -480,20 +478,19 @@ void COpenSubDlg::UpdateList()
       OSApi::subtitle_info data=m_result_list[i];
       int index=m_results_list_control.GetItemCount();
 
-      int idx_lang=m_cmb_lang.GetCurSel();
       int idx_match=m_cmb_match.GetCurSel();
-      if(idx_lang>=0&&idx_match>=0)
+      if(idx_match>=0)
         {
          CString str_lang,str_match;
-         m_cmb_lang.GetLBText(idx_lang,str_lang);
+         m_edit_lang.GetWindowText(str_lang);
          m_cmb_match.GetLBText(idx_match,str_match);
          if(wcscmp(data.lang,str_lang)!=0||wcscmp(data.matched_by,str_match)!=0)
             continue;
         }
-
+	  
       LVITEM lvItem;
       int nItem;
-
+	  
       lvItem.mask=LVIF_TEXT|LVIF_PARAM;
       lvItem.iItem=index;
       lvItem.iSubItem=0;
@@ -552,13 +549,12 @@ void COpenSubDlg::OnLinkClicked()
 //+------------------------------------------------------------------+
 void COpenSubDlg::OnLinkClicked2()
 {
-   int idx_lang=m_cmb_lang.GetCurSel();
    int idx_match=m_cmb_match.GetCurSel();
-   if(idx_lang>=0&&idx_match>=0)
+   if(idx_match>=0)
    {
       CString str_lang,str_match;
       CString str;
-      m_cmb_lang.GetLBText(idx_lang,str_lang);
+      m_edit_lang.GetWindowText(str_lang);
       m_cmb_match.GetLBText(idx_match,str_match);
       if(wcscmp(str_match,L"fulltext")==0)
          str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviename-%s",(LPCWSTR)str_lang,file_info.file_name_no_extension);

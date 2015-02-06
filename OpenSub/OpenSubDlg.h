@@ -54,7 +54,6 @@ public:
    afx_msg void      OnBnClickedDownload();
    afx_msg void      OnLinkClicked();
    afx_msg void      OnLinkClicked2();
-   CComboBox         m_cmb_lang;
    afx_msg void      OnCbnSelchangeCombo1();
    CComboBox         m_cmb_match;
    CButton           m_btn_download;
@@ -64,5 +63,6 @@ public:
    CLink             m_link_websearch;
    afx_msg void      OnBnClickedExplore();
    afx_msg void      OnBnClickedPlay();
-  };
+   CEdit             m_edit_lang;
+};
 //+------------------------------------------------------------------+
