@@ -119,7 +119,7 @@ BOOL COpenSubDlg::OnInitDialog()
    m_button_lang.SetWindowText(m_lang);
    m_cmb_match.AddString(L"hash");
    m_cmb_match.AddString(L"text");
-   m_cmb_match.SetCurSel(1);
+   m_cmb_match.SetCurSel(0);
    m_btn_download.EnableWindow(FALSE);
    m_btn_explore.EnableWindow(FALSE);
    m_btn_play.EnableWindow(FALSE);
@@ -268,37 +268,38 @@ UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
 	   return FALSE;
    }
 //--- rename subtitle and move to movie folder 
-   WCHAR existing_location[512];
    WCHAR new_location[512];
-   swprintf_s(existing_location,sizeof(existing_location)/sizeof(WCHAR),L"c:\\sub");
-   swprintf_s(new_location,sizeof(existing_location)/sizeof(WCHAR),L"%s\\%s.%s",file_info.file_directory,file_info.file_name_no_extension,sub_info.sub_format);
+   swprintf_s(new_location,sizeof(new_location)/sizeof(WCHAR),L"%s\\%s.%s",file_info.file_directory
+																		  ,file_info.file_name_no_extension
+																		  ,sub_info.sub_format);
    if(GetFileAttributes(new_location)!=INVALID_FILE_ATTRIBUTES && !::DeleteFile(new_location))
      {
-      PrintMessage(dlg->GetSafeHwnd(),L"Cannot delete target file.",MESSAGE_ERROR);
+      PrintMessage(dlg->GetSafeHwnd(),L"Cannot delete existing subtitle.",MESSAGE_ERROR);
       ::DeleteFile(L"c:\\sub.zip");
-      ::DeleteFile(existing_location);
+	  ::DeleteFile(L"c:\\sub");
 	  dlg->m_btn_download.EnableWindow(TRUE);
       return(0);
      }
-   PrintMessage(dlg->GetSafeHwnd(),L"Moving file...");
-   if(!::MoveFile(existing_location,new_location))
+   PrintMessage(dlg->GetSafeHwnd(),L"Moving subtitle...");
+   if (!::MoveFile(L"c:\\sub", new_location))
       PrintMessage(dlg->GetSafeHwnd(),L"Cannot move file.",MESSAGE_ERROR);
    else
       PrintMessage(dlg->GetSafeHwnd(),L"Done.");
    ::DeleteFile(L"c:\\sub.zip");
-   ::DeleteFile(existing_location);
+   ::DeleteFile(L"c:\\sub");
    dlg->m_btn_download.EnableWindow(TRUE);
    return(0);
   }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+// Test subtitle sequence
+// 1. Retrieve selected subtitle information
+// 2. Disable Test button
+// 3. Download and unzip subtitle file
+// 4. 
 UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
 {
     COpenSubDlg         *dlg=(COpenSubDlg*)pvParam;
     InputFileInfo        &file_info=dlg->file_info;
     OSApi::subtitle_info sub_info;
-    WCHAR                command[1024];
     //--- get selected item
     if(!dlg->GetSubInfo(sub_info))
         return FALSE;
@@ -309,16 +310,44 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
 		dlg->m_btn_play.EnableWindow(TRUE);
 		return FALSE;
 	}
-    
-
-	swprintf_s(command, sizeof(command) / sizeof(WCHAR), L"\"%s\"", file_info.file_full_name);
-
+	//
+	WCHAR existing_subtitle[512];
+	WCHAR temp_subtitle[512];
+	swprintf_s(existing_subtitle, sizeof(existing_subtitle) / sizeof(WCHAR), L"%s\\%s.%s",
+		 file_info.file_directory
+		,file_info.file_name_no_extension
+		,sub_info.sub_format);
+	swprintf_s(temp_subtitle, sizeof(temp_subtitle) / sizeof(WCHAR), L"%s\\temp_moved_open_sub.tmp",
+		file_info.file_directory);
+	::DeleteFile(temp_subtitle);
+	//does an existing subtitle already available? then temporarily move it
+	if (GetFileAttributes(existing_subtitle) != INVALID_FILE_ATTRIBUTES)
+	{
+		if (!::MoveFile(existing_subtitle, temp_subtitle))
+		{
+			PrintMessage(dlg->GetSafeHwnd(), L"Cannot create temporary file.", MESSAGE_ERROR);
+			dlg->m_btn_play.EnableWindow(TRUE);
+			::DeleteFile(L"C:\\sub.zip");
+			::DeleteFile(L"C:\\sub");
+			return FALSE;
+		}
+	}
+	if (!::MoveFile(L"c:\\sub", existing_subtitle))
+	{
+		PrintMessage(dlg->GetSafeHwnd(), L"Cannot move subtitle file.", MESSAGE_ERROR);
+		dlg->m_btn_play.EnableWindow(TRUE);
+		::DeleteFile(L"C:\\sub.zip");
+		::DeleteFile(L"C:\\sub");
+		if (!::MoveFile(temp_subtitle, existing_subtitle))
+			PrintMessage(dlg->GetSafeHwnd(), L"Cannot rename temporary file.", MESSAGE_ERROR);
+	}
+	//
 	SHELLEXECUTEINFO sh_exec_info = { 0 };
 	sh_exec_info.cbSize = sizeof(SHELLEXECUTEINFO);
 	sh_exec_info.fMask = SEE_MASK_NOCLOSEPROCESS;
 	sh_exec_info.hwnd = NULL;
 	sh_exec_info.lpVerb = L"open";
-	sh_exec_info.lpFile = command;
+	sh_exec_info.lpFile = file_info.file_full_name;
 	sh_exec_info.lpParameters = L"";
 	sh_exec_info.lpDirectory = NULL;
 	sh_exec_info.nShow = SW_SHOW;
@@ -329,6 +358,11 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
 		::WaitForSingleObject(sh_exec_info.hProcess, INFINITE);
 		dlg->PrintMessage(dlg->GetSafeHwnd(), L"");
 		CloseHandle(sh_exec_info.hProcess);
+		if (GetFileAttributes(temp_subtitle) != INVALID_FILE_ATTRIBUTES)
+		if (!::DeleteFile(existing_subtitle) || !::MoveFile(temp_subtitle, existing_subtitle))
+			PrintMessage(dlg->GetSafeHwnd(), L"Cannot rename temporary file.", MESSAGE_ERROR);
+		if (!::DeleteFile(existing_subtitle))
+			PrintMessage(dlg->GetSafeHwnd(), L"Cannot delete test subtitle.", MESSAGE_ERROR);
 	}
 	else
 		dlg->PrintMessage(dlg->GetSafeHwnd(), L"failed to open video", MESSAGE_ERROR);
