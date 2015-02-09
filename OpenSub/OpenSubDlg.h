@@ -38,6 +38,8 @@ private:
    void              InitializeList();
    void              SetTitle();
    static CString    Read7ZipPath();
+   static BOOL       Launch(LPCWSTR cmd, HANDLE *hProc=NULL);
+   void              EnableButtons(BOOL);
    CString           m_lang;
 private:
    OSApi::SubtitleInfoList m_result_list;

@@ -120,13 +120,9 @@ BOOL COpenSubDlg::OnInitDialog()
    m_cmb_match.AddString(L"hash");
    m_cmb_match.AddString(L"text");
    m_cmb_match.SetCurSel(0);
-   m_btn_download.EnableWindow(FALSE);
-   m_btn_explore.EnableWindow(FALSE);
-   m_btn_play.EnableWindow(FALSE);
-   m_button_lang.EnableWindow(FALSE);
-   m_cmb_match.EnableWindow(FALSE);
-   m_results_list_control.EnableWindow(FALSE);
-   m_link.EnableWindow(FALSE);
+
+   EnableButtons(FALSE);
+
 //--- start searching
    AfxBeginThread(ThreadSearchSub,this);
    return(TRUE);
@@ -342,22 +338,13 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
 			PrintMessage(dlg->GetSafeHwnd(), L"Cannot rename temporary file.", MESSAGE_ERROR);
 	}
 	//
-	SHELLEXECUTEINFO sh_exec_info = { 0 };
-	sh_exec_info.cbSize = sizeof(SHELLEXECUTEINFO);
-	sh_exec_info.fMask = SEE_MASK_NOCLOSEPROCESS;
-	sh_exec_info.hwnd = NULL;
-	sh_exec_info.lpVerb = L"open";
-	sh_exec_info.lpFile = file_info.file_full_name;
-	sh_exec_info.lpParameters = L"";
-	sh_exec_info.lpDirectory = NULL;
-	sh_exec_info.nShow = SW_SHOW;
-	sh_exec_info.hInstApp = NULL;
-	if (ShellExecuteEx(&sh_exec_info))
+	HANDLE hProc;
+	if (Launch(file_info.file_full_name,&hProc))
 	{
 		dlg->PrintMessage(dlg->GetSafeHwnd(), L"Playing...");
-		::WaitForSingleObject(sh_exec_info.hProcess, INFINITE);
+		::WaitForSingleObject(hProc, INFINITE);
 		dlg->PrintMessage(dlg->GetSafeHwnd(), L"");
-		CloseHandle(sh_exec_info.hProcess);
+		CloseHandle(hProc);
 		if (GetFileAttributes(temp_subtitle) != INVALID_FILE_ATTRIBUTES)
 		if (!::DeleteFile(existing_subtitle) || !::MoveFile(temp_subtitle, existing_subtitle))
 			PrintMessage(dlg->GetSafeHwnd(), L"Cannot rename temporary file.", MESSAGE_ERROR);
@@ -431,13 +418,9 @@ LRESULT COpenSubDlg::OnSearchFinished(WPARAM wParam, LPARAM lParam)
    }
    if (m_results_list_control.GetItemCount() == 0)
 	   PrintMessage(this->GetSafeHwnd(), L"No subtitles found.");
-   m_btn_download.EnableWindow(TRUE);
-   m_btn_explore.EnableWindow(TRUE);
-   m_btn_play.EnableWindow(TRUE);
-   m_button_lang.EnableWindow(TRUE);
-   m_cmb_match.EnableWindow(TRUE);
-   m_results_list_control.EnableWindow(TRUE);
-   m_link.EnableWindow(TRUE);
+
+   EnableButtons(TRUE);
+
    return(0);
   }
 //+------------------------------------------------------------------+
@@ -608,17 +591,39 @@ void COpenSubDlg::OnLinkClicked()
          str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviename-%s",(LPCWSTR)str_lang,file_info.file_name_no_extension);
       if(wcscmp(str_match,L"hash")==0)
          str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviebytesize-%s/moviehash-%s",(LPCWSTR)str_lang,file_info.file_size,file_info.file_hash);
-	  SHELLEXECUTEINFO sh_exec_info = { 0 };
-	  sh_exec_info.cbSize = sizeof(SHELLEXECUTEINFO);
-	  sh_exec_info.fMask = 0;
-	  sh_exec_info.hwnd = NULL;
-	  sh_exec_info.lpVerb = NULL;
-	  sh_exec_info.lpFile = str;
-	  sh_exec_info.lpParameters = L"";
-	  sh_exec_info.lpDirectory = NULL;
-	  sh_exec_info.nShow = SW_SHOWNORMAL;
-	  sh_exec_info.hInstApp = NULL;
-	  ShellExecuteEx(&sh_exec_info);
+	  Launch(str);
    }
+}
+BOOL COpenSubDlg::Launch(LPCWSTR cmd,HANDLE *hProc)
+{
+	SHELLEXECUTEINFO sh_exec_info = { 0 };
+	sh_exec_info.cbSize = sizeof(SHELLEXECUTEINFO);
+	sh_exec_info.fMask = SEE_MASK_NOCLOSEPROCESS;
+	sh_exec_info.hwnd = NULL;
+	sh_exec_info.lpVerb = L"open";
+	sh_exec_info.lpFile = cmd;
+	sh_exec_info.lpParameters = L"";
+	sh_exec_info.lpDirectory = NULL;
+	sh_exec_info.nShow = SW_SHOWNORMAL;
+	sh_exec_info.hInstApp = NULL;
+	
+	if (ShellExecuteEx(&sh_exec_info))
+	{
+		if (hProc)
+			*hProc = sh_exec_info.hProcess;
+		return TRUE;
+	}
+	else
+	return FALSE;
+}
+void COpenSubDlg::EnableButtons(BOOL flag)
+{
+	m_btn_download.EnableWindow(flag);
+	m_btn_explore.EnableWindow(flag);
+	m_btn_play.EnableWindow(flag);
+	m_button_lang.EnableWindow(flag);
+	m_cmb_match.EnableWindow(flag);
+	m_results_list_control.EnableWindow(flag);
+	m_link.EnableWindow(flag);
 }
 //+------------------------------------------------------------------+
