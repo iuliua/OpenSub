@@ -32,8 +32,7 @@ void COpenSubDlg::DoDataExchange(CDataExchange* pDX)
 	  DDX_Control(pDX, IDC_BUTTON2, m_btn_explore);
 	  DDX_Control(pDX, IDC_BUTTON3, m_btn_play);
 	  DDX_Control(pDX, IDC_LINK_MAIN, m_link);
-	  DDX_Control(pDX, IDC_LINK_MAIN2, m_link_websearch);
-	  DDX_Control(pDX, IDC_EDIT1, m_edit_lang);
+	  DDX_Control(pDX, IDC_BUTTON4, m_button_lang);
 }
 BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_WM_PAINT()
@@ -48,7 +47,6 @@ BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_BN_CLICKED(IDC_BUTTON2, &COpenSubDlg::OnBnClickedExplore)
    ON_BN_CLICKED(IDC_BUTTON3, &COpenSubDlg::OnBnClickedPlay)
    ON_BN_CLICKED(IDC_LINK_MAIN,&OnLinkClicked)
-   ON_BN_CLICKED(IDC_LINK_MAIN2,&OnLinkClicked2)
 END_MESSAGE_MAP()
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -117,17 +115,18 @@ BOOL COpenSubDlg::OnInitDialog()
    SetTitle();
 //--- create list columns
    InitializeList();
-   m_edit_lang.SetWindowText(L"eng");
-   m_cmb_match.AddString(L"moviehash");
-   m_cmb_match.AddString(L"fulltext");
+   m_lang = L"eng";
+   m_button_lang.SetWindowText(m_lang);
+   m_cmb_match.AddString(L"hash");
+   m_cmb_match.AddString(L"text");
    m_cmb_match.SetCurSel(1);
    m_btn_download.EnableWindow(FALSE);
    m_btn_explore.EnableWindow(FALSE);
    m_btn_play.EnableWindow(FALSE);
-   m_edit_lang.EnableWindow(FALSE);
+   m_button_lang.EnableWindow(FALSE);
    m_cmb_match.EnableWindow(FALSE);
    m_results_list_control.EnableWindow(FALSE);
-   m_link_websearch.EnableWindow(FALSE);
+   m_link.EnableWindow(FALSE);
 //--- start searching
    AfxBeginThread(ThreadSearchSub,this);
    return(TRUE);
@@ -345,7 +344,7 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
 UINT COpenSubDlg::ThreadSearchSub(LPVOID pvParam)
   {
    COpenSubDlg            *dlg=(COpenSubDlg*)pvParam;
-   OSApi                   m_api(L"",L"",L"eng",L"JulianOS");
+   OSApi                   m_api(L"",L"",dlg->m_lang,L"JulianOS");
    OSApi::SubtitleInfoList result_list;
    InputFileInfo        &file_info=dlg->file_info;
    //--- validate file
@@ -391,13 +390,20 @@ UINT COpenSubDlg::ThreadSearchSub(LPVOID pvParam)
 LRESULT COpenSubDlg::OnSearchFinished(WPARAM wParam, LPARAM lParam)
   {
    UpdateList();
+   if (m_results_list_control.GetItemCount() == 0)
+   {
+	   m_cmb_match.SetCurSel(m_cmb_match.GetCurSel()==1?0:1);
+	   UpdateList();
+   }
+   if (m_results_list_control.GetItemCount() == 0)
+	   PrintMessage(this->GetSafeHwnd(), L"No subtitles found.");
    m_btn_download.EnableWindow(TRUE);
    m_btn_explore.EnableWindow(TRUE);
    m_btn_play.EnableWindow(TRUE);
-   m_edit_lang.EnableWindow(TRUE);
+   m_button_lang.EnableWindow(TRUE);
    m_cmb_match.EnableWindow(TRUE);
    m_results_list_control.EnableWindow(TRUE);
-   m_link_websearch.EnableWindow(TRUE);
+   m_link.EnableWindow(TRUE);
    return(0);
   }
 //+------------------------------------------------------------------+
@@ -467,6 +473,25 @@ void COpenSubDlg::OnCbnSelchangeCombo1()
   {
    UpdateList();
   }
+// Comparison extracts values from the List-Control
+int CALLBACK SortFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+	CListCtrl* pListCtrl = (CListCtrl*)lParamSort;
+	CString    strItem1 = pListCtrl->GetItemText(static_cast<int>(lParam1), 0);
+	CString    strItem2 = pListCtrl->GetItemText(static_cast<int>(lParam2), 0);
+
+	int x1 = _tstoi(strItem1.GetBuffer());
+	int x2 = _tstoi(strItem2.GetBuffer());
+	int result = 0;
+	if ((x1 - x2) < 0)
+		result = -1;
+	else if ((x1 - x2) == 0)
+		result = 0;
+	else
+		result = 1;
+
+	return result*-1;
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -482,8 +507,13 @@ void COpenSubDlg::UpdateList()
       if(idx_match>=0)
         {
          CString str_lang,str_match;
-         m_edit_lang.GetWindowText(str_lang);
+         m_button_lang.GetWindowText(str_lang);
          m_cmb_match.GetLBText(idx_match,str_match);
+		 if (str_match == L"hash")
+			 str_match = L"moviehash";
+		 else
+			 if (str_match == L"text")
+				 str_match = L"fulltext";
          if(wcscmp(data.lang,str_lang)!=0||wcscmp(data.matched_by,str_match)!=0)
             continue;
         }
@@ -500,6 +530,7 @@ void COpenSubDlg::UpdateList()
 
       m_results_list_control.SetItemText(nItem,1,data.mov_release_name);
      }
+   m_results_list_control.SortItemsEx(&SortFunc, (LPARAM)&m_results_list_control);
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -532,33 +563,16 @@ void COpenSubDlg::OnBnClickedPlay()
 //+------------------------------------------------------------------+
 void COpenSubDlg::OnLinkClicked()
 {
-   SHELLEXECUTEINFO sh_exec_info = { 0 };
-   sh_exec_info.cbSize = sizeof(SHELLEXECUTEINFO);
-   sh_exec_info.fMask = 0;
-   sh_exec_info.hwnd = NULL;
-   sh_exec_info.lpVerb = NULL;
-   sh_exec_info.lpFile = L"http://www.opensubtitles.org";
-   sh_exec_info.lpParameters = L"";
-   sh_exec_info.lpDirectory = NULL;
-   sh_exec_info.nShow = SW_SHOWNORMAL;
-   sh_exec_info.hInstApp = NULL;
-   ShellExecuteEx(&sh_exec_info);
-}
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-void COpenSubDlg::OnLinkClicked2()
-{
    int idx_match=m_cmb_match.GetCurSel();
    if(idx_match>=0)
    {
       CString str_lang,str_match;
       CString str;
-      m_edit_lang.GetWindowText(str_lang);
+      m_button_lang.GetWindowText(str_lang);
       m_cmb_match.GetLBText(idx_match,str_match);
-      if(wcscmp(str_match,L"fulltext")==0)
+      if(wcscmp(str_match,L"text")==0)
          str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviename-%s",(LPCWSTR)str_lang,file_info.file_name_no_extension);
-      if(wcscmp(str_match,L"moviehash")==0)
+      if(wcscmp(str_match,L"hash")==0)
          str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviebytesize-%s/moviehash-%s",(LPCWSTR)str_lang,file_info.file_size,file_info.file_hash);
 	  SHELLEXECUTEINFO sh_exec_info = { 0 };
 	  sh_exec_info.cbSize = sizeof(SHELLEXECUTEINFO);

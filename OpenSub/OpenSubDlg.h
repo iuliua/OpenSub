@@ -38,6 +38,7 @@ private:
    void              InitializeList();
    void              SetTitle();
    static CString    Read7ZipPath();
+   CString           m_lang;
 private:
    OSApi::SubtitleInfoList m_result_list;
    void              UpdateList();
@@ -60,9 +61,8 @@ public:
    CButton           m_btn_explore;
    CButton           m_btn_play;
    CLink             m_link;
-   CLink             m_link_websearch;
    afx_msg void      OnBnClickedExplore();
    afx_msg void      OnBnClickedPlay();
-   CEdit             m_edit_lang;
+   CButton m_button_lang;
 };
 //+------------------------------------------------------------------+

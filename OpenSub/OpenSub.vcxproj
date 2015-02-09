@@ -79,7 +79,8 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command />
+      <Command>echo Copying to app folder...
+copy /Y $(TargetPath) "$(ProgramFiles)\OSubAgent\OpenSub.exe"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

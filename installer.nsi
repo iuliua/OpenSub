@@ -22,10 +22,12 @@ UninstPage uninstConfirm
 UninstPage instfiles
 
 ;--------------------------------
-
+Function .onInit
+ExecWait $INSTDIR\uninstall.exe
+FunctionEnd
 ; The stuff to install
 Section "Install"
-
+  
   SetOutPath $INSTDIR
   File "Release\OpenSub.exe"
   SetRegView 64
