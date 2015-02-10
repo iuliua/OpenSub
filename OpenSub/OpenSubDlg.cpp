@@ -178,44 +178,46 @@ BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
 {
     //--- get path of 7zip executable
     CString zip_exe_path=Read7ZipPath(); 
-    if(zip_exe_path.IsEmpty())
-    {
-        PrintMessage(GetSafeHwnd(),L"7-Zip not installed.");
-        return FALSE;
-    }
-    ::DeleteFile(L"C:\\sub.zip");
-    ::DeleteFile(L"C:\\sub");
-    //--- download packed subtitles
-    if(URLDownloadToFile(NULL,sub_info.zip_link,L"c:\\sub.zip",0,NULL)!=S_OK)
-    {
-        PrintMessage(GetSafeHwnd(),L"Download failed.");
-        return FALSE;
-    }
-    //--- unzip
-    WCHAR command[1024];
-    swprintf_s(command,sizeof(command)/sizeof(WCHAR),L"%s\\7z.exe e c:\\sub.zip -oc:\\ \"sub\" -y",zip_exe_path);
-    STARTUPINFO info={0};
-    info.cb=sizeof(info);
-    info.dwFlags=STARTF_USESHOWWINDOW;
-    info.wShowWindow=SW_HIDE;
-    PROCESS_INFORMATION processInfo;
-    bool unzip_result=false;
-    if (CreateProcess(NULL,command, NULL, NULL, TRUE, 0, NULL, L"C:\\", &info, &processInfo))
-    {
-        DWORD exit_code=0;
-        PrintMessage(GetSafeHwnd(),L"Unpacking...");
-        ::WaitForSingleObject(processInfo.hProcess, 5000);
-        if(GetExitCodeProcess(processInfo.hProcess,&exit_code) && exit_code ==0)
-            unzip_result=true;
-        CloseHandle(processInfo.hProcess);
-        CloseHandle(processInfo.hThread);
-    }
-    if(!unzip_result)
-    {
-        PrintMessage(GetSafeHwnd(),L"Cannot unzip file.");
-        ::DeleteFile(L"c:\\sub.zip");
-        return FALSE;
-    }
+	if (!zip_exe_path.IsEmpty())
+	{
+		::DeleteFile(L"C:\\sub.zip");
+		::DeleteFile(L"C:\\sub");
+		//--- download packed subtitles
+		if (URLDownloadToFile(NULL, sub_info.zip_link, L"c:\\sub.zip", 0, NULL) == S_OK)
+		{
+			//--- unzip
+			WCHAR command[1024];
+			swprintf_s(command, sizeof(command) / sizeof(WCHAR), L"%s\\7z.exe e c:\\sub.zip -oc:\\ \"sub\" -y", zip_exe_path);
+			STARTUPINFO info = { 0 };
+			info.cb = sizeof(info);
+			info.dwFlags = STARTF_USESHOWWINDOW;
+			info.wShowWindow = SW_HIDE;
+			PROCESS_INFORMATION processInfo;
+			if (CreateProcess(NULL, command, NULL, NULL, TRUE, 0, NULL, L"C:\\", &info, &processInfo))
+			{
+				DWORD exit_code = 0;
+				PrintMessage(GetSafeHwnd(), L"Unpacking...");
+				::WaitForSingleObject(processInfo.hProcess, 5000);
+				if (!GetExitCodeProcess(processInfo.hProcess, &exit_code) || exit_code != 0)
+				{
+					PrintMessage(GetSafeHwnd(), L"Cannot unzip file.");
+					::DeleteFile(L"c:\\sub.zip");
+				}
+				CloseHandle(processInfo.hProcess);
+				CloseHandle(processInfo.hThread);
+			}
+		}
+		else
+		{
+			PrintMessage(GetSafeHwnd(), L"Download failed.");
+			return FALSE;
+		}
+	}
+	else
+	{
+		PrintMessage(GetSafeHwnd(), L"7-Zip not installed.");
+		return FALSE;
+	}
     return TRUE;
 }
 //+------------------------------------------------------------------+
