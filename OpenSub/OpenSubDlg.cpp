@@ -250,41 +250,41 @@ BOOL COpenSubDlg::GetSubInfo(OSApi::subtitle_info& sub_info)
 //+------------------------------------------------------------------+
 UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
   {
-   COpenSubDlg         *dlg=(COpenSubDlg*)pvParam;
-   InputFileInfo        &file_info=dlg->file_info;
-   OSApi::subtitle_info sub_info;
-//--- get selected item
-   if(!dlg->GetSubInfo(sub_info))
-       return FALSE;
-   dlg->m_btn_download.EnableWindow(FALSE);
-   //--- download and unzip subtitle to c:\sub file
-   if (!dlg->DownloadAndUnzip(sub_info))
+
+   WCHAR                new_location[512];
+   COpenSubDlg         *dlg       = (COpenSubDlg*)pvParam;
+   InputFileInfo       &file_info = dlg->file_info;
+   OSApi::subtitle_info sub_info = { 0 };
+
+   // get selected item
+   if(dlg->GetSubInfo(sub_info))
    {
+	   dlg->m_btn_download.EnableWindow(FALSE);
+	   // download and unzip subtitle to c:\sub file
+	   if(dlg->DownloadAndUnzip(sub_info))
+	   {
+		   // rename subtitle and move to movie folder 
+		   swprintf_s(new_location, sizeof(new_location) / sizeof(WCHAR), L"%s\\%s.%s", file_info.file_directory
+			   , file_info.file_name_no_extension
+			   , sub_info.sub_format);
+
+		   if (GetFileAttributes(new_location) != INVALID_FILE_ATTRIBUTES && !::DeleteFile(new_location))
+			   PrintMessage(dlg->GetSafeHwnd(), L"Cannot delete existing subtitle.", MESSAGE_ERROR);
+		   else
+		   {
+			   PrintMessage(dlg->GetSafeHwnd(), L"Moving subtitle...");
+			   if (!::MoveFile(L"c:\\sub", new_location))
+				   PrintMessage(dlg->GetSafeHwnd(), L"Cannot move file.", MESSAGE_ERROR);
+			   else
+				   PrintMessage(dlg->GetSafeHwnd(), L"Done.");
+		   }
+	   }
+	   // cleanup
+	   ::DeleteFile(L"c:\\sub.zip");
+	   ::DeleteFile(L"c:\\sub");
 	   dlg->m_btn_download.EnableWindow(TRUE);
-	   return FALSE;
    }
-//--- rename subtitle and move to movie folder 
-   WCHAR new_location[512];
-   swprintf_s(new_location,sizeof(new_location)/sizeof(WCHAR),L"%s\\%s.%s",file_info.file_directory
-																		  ,file_info.file_name_no_extension
-																		  ,sub_info.sub_format);
-   if(GetFileAttributes(new_location)!=INVALID_FILE_ATTRIBUTES && !::DeleteFile(new_location))
-     {
-      PrintMessage(dlg->GetSafeHwnd(),L"Cannot delete existing subtitle.",MESSAGE_ERROR);
-      ::DeleteFile(L"c:\\sub.zip");
-	  ::DeleteFile(L"c:\\sub");
-	  dlg->m_btn_download.EnableWindow(TRUE);
-      return(0);
-     }
-   PrintMessage(dlg->GetSafeHwnd(),L"Moving subtitle...");
-   if (!::MoveFile(L"c:\\sub", new_location))
-      PrintMessage(dlg->GetSafeHwnd(),L"Cannot move file.",MESSAGE_ERROR);
-   else
-      PrintMessage(dlg->GetSafeHwnd(),L"Done.");
-   ::DeleteFile(L"c:\\sub.zip");
-   ::DeleteFile(L"c:\\sub");
-   dlg->m_btn_download.EnableWindow(TRUE);
-   return(0);
+   return(FALSE);
   }
 // Test subtitle sequence
 // 1. Retrieve selected subtitle information
@@ -293,71 +293,71 @@ UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
 // 4. 
 UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
 {
+	HANDLE               hProc(NULL);
     COpenSubDlg         *dlg=(COpenSubDlg*)pvParam;
     InputFileInfo        &file_info=dlg->file_info;
-    OSApi::subtitle_info sub_info;
-    //--- get selected item
-    if(!dlg->GetSubInfo(sub_info))
-        return FALSE;
-    dlg->m_btn_play.EnableWindow(FALSE);
-    //--- download and unzip subtitle to c:\sub file
-	if (!dlg->DownloadAndUnzip(sub_info))
+	OSApi::subtitle_info sub_info = { 0 };
+	WCHAR                existing_subtitle[512];
+	WCHAR                temp_subtitle[512];
+	bool                 subtitle_exists = false;
+    
+	// get selected item
+	if (dlg->GetSubInfo(sub_info))
 	{
-		dlg->m_btn_play.EnableWindow(TRUE);
-		return FALSE;
-	}
-	//
-	WCHAR existing_subtitle[512];
-	WCHAR temp_subtitle[512];
-	swprintf_s(existing_subtitle, sizeof(existing_subtitle) / sizeof(WCHAR), L"%s\\%s.%s",
-		 file_info.file_directory
-		,file_info.file_name_no_extension
-		,sub_info.sub_format);
-	swprintf_s(temp_subtitle, sizeof(temp_subtitle) / sizeof(WCHAR), L"%s\\temp_moved_open_sub.tmp",
-		file_info.file_directory);
-	::DeleteFile(temp_subtitle);
-	//does an existing subtitle already available? then temporarily move it
-	if (GetFileAttributes(existing_subtitle) != INVALID_FILE_ATTRIBUTES)
-	{
-		if (!::MoveFile(existing_subtitle, temp_subtitle))
+		dlg->m_btn_play.EnableWindow(FALSE);
+		//--- download and unzip subtitle to c:\sub file
+		if (dlg->DownloadAndUnzip(sub_info))
 		{
-			PrintMessage(dlg->GetSafeHwnd(), L"Cannot create temporary file.", MESSAGE_ERROR);
-			dlg->m_btn_play.EnableWindow(TRUE);
-			::DeleteFile(L"C:\\sub.zip");
-			::DeleteFile(L"C:\\sub");
-			return FALSE;
+			swprintf_s(existing_subtitle, sizeof(existing_subtitle) / sizeof(WCHAR), L"%s\\%s.%s",
+				file_info.file_directory
+				, file_info.file_name_no_extension
+				, sub_info.sub_format);
+			swprintf_s(temp_subtitle, sizeof(temp_subtitle) / sizeof(WCHAR), L"%s\\temp_moved_open_sub.tmp",
+				file_info.file_directory);
+			::DeleteFile(temp_subtitle);
+			
+			subtitle_exists = (GetFileAttributes(existing_subtitle) != INVALID_FILE_ATTRIBUTES);
+
+			//does an existing subtitle already available? then temporarily move it	
+			if ((subtitle_exists && ::MoveFile(existing_subtitle, temp_subtitle)) || !subtitle_exists)
+			{
+				if (::MoveFile(L"c:\\sub", existing_subtitle))
+				{
+					if (Launch(file_info.file_full_name, &hProc))
+					{
+						dlg->PrintMessage(dlg->GetSafeHwnd(), L"Playing...");
+						::WaitForSingleObject(hProc, INFINITE);
+						dlg->PrintMessage(dlg->GetSafeHwnd(), L"");
+						CloseHandle(hProc);
+						if (subtitle_exists)
+						{
+							if (!::DeleteFile(existing_subtitle) || !::MoveFile(temp_subtitle, existing_subtitle))
+								PrintMessage(dlg->GetSafeHwnd(), L"Cannot rename temporary file.", MESSAGE_ERROR);
+						}
+						else
+						{
+							if (!::DeleteFile(existing_subtitle))
+								PrintMessage(dlg->GetSafeHwnd(), L"Cannot delete test subtitle.", MESSAGE_ERROR);
+						}
+					}
+					else
+						PrintMessage(dlg->GetSafeHwnd(), L"failed to open video", MESSAGE_ERROR);
+				}
+				else
+				{
+					PrintMessage(dlg->GetSafeHwnd(), L"Cannot move subtitle file.", MESSAGE_ERROR);
+					if (!::MoveFile(temp_subtitle, existing_subtitle))
+						PrintMessage(dlg->GetSafeHwnd(), L"Cannot rename temporary file.", MESSAGE_ERROR);
+				}
+			}
+			else
+				PrintMessage(dlg->GetSafeHwnd(), L"Cannot create temporary file.", MESSAGE_ERROR);
 		}
-	}
-	if (!::MoveFile(L"c:\\sub", existing_subtitle))
-	{
-		PrintMessage(dlg->GetSafeHwnd(), L"Cannot move subtitle file.", MESSAGE_ERROR);
 		dlg->m_btn_play.EnableWindow(TRUE);
 		::DeleteFile(L"C:\\sub.zip");
 		::DeleteFile(L"C:\\sub");
-		if (!::MoveFile(temp_subtitle, existing_subtitle))
-			PrintMessage(dlg->GetSafeHwnd(), L"Cannot rename temporary file.", MESSAGE_ERROR);
 	}
-	//
-	HANDLE hProc;
-	if (Launch(file_info.file_full_name,&hProc))
-	{
-		dlg->PrintMessage(dlg->GetSafeHwnd(), L"Playing...");
-		::WaitForSingleObject(hProc, INFINITE);
-		dlg->PrintMessage(dlg->GetSafeHwnd(), L"");
-		CloseHandle(hProc);
-		if (GetFileAttributes(temp_subtitle) != INVALID_FILE_ATTRIBUTES)
-		if (!::DeleteFile(existing_subtitle) || !::MoveFile(temp_subtitle, existing_subtitle))
-			PrintMessage(dlg->GetSafeHwnd(), L"Cannot rename temporary file.", MESSAGE_ERROR);
-		if (!::DeleteFile(existing_subtitle))
-			PrintMessage(dlg->GetSafeHwnd(), L"Cannot delete test subtitle.", MESSAGE_ERROR);
-	}
-	else
-		dlg->PrintMessage(dlg->GetSafeHwnd(), L"failed to open video", MESSAGE_ERROR);
-
-    dlg->m_btn_play.EnableWindow(TRUE);
-	::DeleteFile(L"C:\\sub.zip");
-	::DeleteFile(L"C:\\sub");
-    return(0);
+    return(FALSE);
 }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -405,9 +405,6 @@ UINT COpenSubDlg::ThreadSearchSub(LPVOID pvParam)
    PrintMessage(dlg->GetSafeHwnd(),strText);
    return(0);
   }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 LRESULT COpenSubDlg::OnSearchFinished(WPARAM wParam, LPARAM lParam)
   {
    UpdateList();
@@ -416,16 +413,9 @@ LRESULT COpenSubDlg::OnSearchFinished(WPARAM wParam, LPARAM lParam)
 	   m_cmb_match.SetCurSel(m_cmb_match.GetCurSel()==1?0:1);
 	   UpdateList();
    }
-   if (m_results_list_control.GetItemCount() == 0)
-	   PrintMessage(this->GetSafeHwnd(), L"No subtitles found.");
-
    EnableButtons(TRUE);
-
    return(0);
   }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 void COpenSubDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
    if ((nID & 0xFFF0) == IDM_ABOUTBOX)
@@ -438,9 +428,6 @@ void COpenSubDlg::OnSysCommand(UINT nID, LPARAM lParam)
       CDialog::OnSysCommand(nID, lParam);
    }
 }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 void COpenSubDlg::OnPaint()
   {
    if (IsIconic())
@@ -490,7 +477,9 @@ void COpenSubDlg::OnCbnSelchangeCombo1()
   {
    UpdateList();
   }
-// Comparison extracts values from the List-Control
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 int CALLBACK SortFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	CListCtrl* pListCtrl = (CListCtrl*)lParamSort;
@@ -555,18 +544,18 @@ void COpenSubDlg::UpdateList()
 void COpenSubDlg::OnBnClickedExplore()
   {
    WCHAR command[512];
-   swprintf_s(command,sizeof(command)/sizeof(WCHAR),L"explorer /select,%s",file_info.file_full_name);
-   STARTUPINFO info={0};
-   info.cb=sizeof(info);
-   info.dwFlags=STARTF_USESHOWWINDOW;
-   info.wShowWindow=SW_SHOW;
+   swprintf_s(command, sizeof(command) / sizeof(WCHAR), L"explorer /select,%s", file_info.file_full_name);
+   STARTUPINFO info = { 0 };
+   info.cb = sizeof(info);
+   info.dwFlags = STARTF_USESHOWWINDOW;
+   info.wShowWindow = SW_SHOW;
    PROCESS_INFORMATION processInfo;
-   if (CreateProcess(NULL,command, NULL, NULL, TRUE, 0, NULL, L"C:\\", &info, &processInfo))
-     {
-      ::WaitForSingleObject(processInfo.hProcess, INFINITE);
-      CloseHandle(processInfo.hProcess);
-      CloseHandle(processInfo.hThread);
-     }
+   if (CreateProcess(NULL, command, NULL, NULL, TRUE, 0, NULL, L"C:\\", &info, &processInfo))
+   {
+	   ::WaitForSingleObject(processInfo.hProcess, INFINITE);
+	   CloseHandle(processInfo.hProcess);
+	   CloseHandle(processInfo.hThread);
+   }
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
