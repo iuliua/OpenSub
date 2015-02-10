@@ -15,8 +15,7 @@
 //+------------------------------------------------------------------+
 COpenSubDlg::COpenSubDlg(CWnd *pParent)
    : CDialog(COpenSubDlg::IDD, pParent),
-     file_info(theApp.m_lpCmdLine),
-     m_error_detected(false)
+     file_info(theApp.m_lpCmdLine)
   {
    m_hIcon=AfxGetApp()->LoadIcon(IDR_MAINFRAME);
   }
@@ -130,10 +129,9 @@ BOOL COpenSubDlg::OnInitDialog()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void COpenSubDlg::PrintMessage(HWND handle,LPCWSTR msg,EnMsgType msg_type)
+void COpenSubDlg::PrintMessage(HWND handle,LPCWSTR msg)
   {
    COPYDATASTRUCT cds;
-   cds.dwData=msg_type;
    cds.cbData=(wcslen(msg)+1)*sizeof(WCHAR);
    cds.lpData=(PVOID)msg;
    ::SendMessage(handle,WM_COPYDATA,0,(LPARAM)(LPVOID)&cds);
@@ -144,15 +142,7 @@ void COpenSubDlg::PrintMessage(HWND handle,LPCWSTR msg,EnMsgType msg_type)
 LRESULT COpenSubDlg::OnCopyData(WPARAM wParam, LPARAM lParam)
 {
     PCOPYDATASTRUCT pcds=(PCOPYDATASTRUCT)lParam;
-    switch(pcds->dwData)
-    {
-    case MESSAGE_ERROR:
-        m_error_detected=true;
-    case MESSAGE_NORMAL:
-        //if(!m_error_detected)
-          GetDlgItem(IDC_STATIC)->SetWindowText((LPCWSTR)pcds->lpData);
-        break;
-    }
+    GetDlgItem(IDC_STATIC)->SetWindowText((LPCWSTR)pcds->lpData);
     return(0);
 }
 //+------------------------------------------------------------------+
@@ -190,7 +180,7 @@ BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
     CString zip_exe_path=Read7ZipPath(); 
     if(zip_exe_path.IsEmpty())
     {
-        PrintMessage(GetSafeHwnd(),L"7-Zip not installed.",MESSAGE_ERROR);
+        PrintMessage(GetSafeHwnd(),L"7-Zip not installed.");
         return FALSE;
     }
     ::DeleteFile(L"C:\\sub.zip");
@@ -198,7 +188,7 @@ BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
     //--- download packed subtitles
     if(URLDownloadToFile(NULL,sub_info.zip_link,L"c:\\sub.zip",0,NULL)!=S_OK)
     {
-        PrintMessage(GetSafeHwnd(),L"Download failed.",MESSAGE_ERROR);
+        PrintMessage(GetSafeHwnd(),L"Download failed.");
         return FALSE;
     }
     //--- unzip
@@ -222,7 +212,7 @@ BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
     }
     if(!unzip_result)
     {
-        PrintMessage(GetSafeHwnd(),L"Cannot unzip file.",MESSAGE_ERROR);
+        PrintMessage(GetSafeHwnd(),L"Cannot unzip file.");
         ::DeleteFile(L"c:\\sub.zip");
         return FALSE;
     }
@@ -269,12 +259,12 @@ UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
 			   , sub_info.sub_format);
 
 		   if (GetFileAttributes(new_location) != INVALID_FILE_ATTRIBUTES && !::DeleteFile(new_location))
-			   PrintMessage(dlg->GetSafeHwnd(), L"Cannot delete existing subtitle.", MESSAGE_ERROR);
+			   PrintMessage(dlg->GetSafeHwnd(), L"Cannot delete existing subtitle.");
 		   else
 		   {
 			   PrintMessage(dlg->GetSafeHwnd(), L"Moving subtitle...");
 			   if (!::MoveFile(L"c:\\sub", new_location))
-				   PrintMessage(dlg->GetSafeHwnd(), L"Cannot move file.", MESSAGE_ERROR);
+				   PrintMessage(dlg->GetSafeHwnd(), L"Cannot move file.");
 			   else
 				   PrintMessage(dlg->GetSafeHwnd(), L"Done.");
 		   }
@@ -332,26 +322,26 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
 						if (subtitle_exists)
 						{
 							if (!::DeleteFile(existing_subtitle) || !::MoveFile(temp_subtitle, existing_subtitle))
-								PrintMessage(dlg->GetSafeHwnd(), L"Cannot rename temporary file.", MESSAGE_ERROR);
+								PrintMessage(dlg->GetSafeHwnd(), L"Cannot rename temporary file.");
 						}
 						else
 						{
 							if (!::DeleteFile(existing_subtitle))
-								PrintMessage(dlg->GetSafeHwnd(), L"Cannot delete test subtitle.", MESSAGE_ERROR);
+								PrintMessage(dlg->GetSafeHwnd(), L"Cannot delete test subtitle.");
 						}
 					}
 					else
-						PrintMessage(dlg->GetSafeHwnd(), L"failed to open video", MESSAGE_ERROR);
+						PrintMessage(dlg->GetSafeHwnd(), L"failed to open video");
 				}
 				else
 				{
-					PrintMessage(dlg->GetSafeHwnd(), L"Cannot move subtitle file.", MESSAGE_ERROR);
+					PrintMessage(dlg->GetSafeHwnd(), L"Cannot move subtitle file.");
 					if (!::MoveFile(temp_subtitle, existing_subtitle))
-						PrintMessage(dlg->GetSafeHwnd(), L"Cannot rename temporary file.", MESSAGE_ERROR);
+						PrintMessage(dlg->GetSafeHwnd(), L"Cannot rename temporary file.");
 				}
 			}
 			else
-				PrintMessage(dlg->GetSafeHwnd(), L"Cannot create temporary file.", MESSAGE_ERROR);
+				PrintMessage(dlg->GetSafeHwnd(), L"Cannot create temporary file.");
 		}
 		dlg->m_btn_play.EnableWindow(TRUE);
 		::DeleteFile(L"C:\\sub.zip");
@@ -365,44 +355,44 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
 UINT COpenSubDlg::ThreadSearchSub(LPVOID pvParam)
   {
    COpenSubDlg            *dlg=(COpenSubDlg*)pvParam;
-   OSApi                   m_api(L"",L"",dlg->m_lang,L"JulianOS");
    OSApi::SubtitleInfoList result_list;
-   InputFileInfo        &file_info=dlg->file_info;
-   //--- validate file
-   if(file_info.file_size[0]==0)
-     {
-      PrintMessage(dlg->GetSafeHwnd(),L"Invalid input file.",MESSAGE_ERROR);
-      return(0);
-     }
-   //--- validate api object
-   if(!m_api.IsValid())
+   InputFileInfo          &file_info=dlg->file_info;
+   OSApi                   m_api(L"",L"",dlg->m_lang,L"JulianOS");
+
+   if (file_info.file_size[0] > 0)
    {
-       PrintMessage(dlg->GetSafeHwnd(),L"Failed to start api.",MESSAGE_ERROR);
-       return(0);
+	   if (m_api.IsValid())
+	   {
+		   PrintMessage(dlg->GetSafeHwnd(), L"Logging in...");
+		   if (m_api.Login())
+		   {
+			   PrintMessage(dlg->GetSafeHwnd(), L"Searching...");
+			   if (m_api.SearchSubtitle(file_info.file_name_no_extension, file_info.file_size, file_info.file_hash, result_list))
+			   {
+				   dlg->m_result_list = result_list;
+				   ::PostMessage(dlg->GetSafeHwnd(), WM_SEARCH_FINISHED, 0, 0);
+				   PrintMessage(dlg->GetSafeHwnd(), L"Logging out...");
+				   if (m_api.Logout())
+				   {
+					   CString    strText;
+					   strText.Format(L"Found %d subtitles.", result_list.size());
+					   PrintMessage(dlg->GetSafeHwnd(), strText);
+				   }
+				   else
+					   PrintMessage(dlg->GetSafeHwnd(), L"Log out failed.");
+			   }
+			   else
+				   PrintMessage(dlg->GetSafeHwnd(), L"Search failed.");
+		   }
+		   else
+			   PrintMessage(dlg->GetSafeHwnd(), L"Log in failed.");
+	   }
+	   else
+		   PrintMessage(dlg->GetSafeHwnd(), L"Failed to start api.");
    }
-   PrintMessage(dlg->GetSafeHwnd(),L"Logging in...");
-   if(!m_api.Login())
-     {
-      PrintMessage(dlg->GetSafeHwnd(),L"Log in failed.",MESSAGE_ERROR);
-      return(0);
-     }
-   PrintMessage(dlg->GetSafeHwnd(),L"Searching...");
-   if(!m_api.SearchSubtitle(file_info.file_name_no_extension,file_info.file_size,file_info.file_hash,result_list))
-     {
-      PrintMessage(dlg->GetSafeHwnd(),L"Search failed.",MESSAGE_ERROR);
-      return(0);
-     }
-   dlg->m_result_list=result_list;
-   ::PostMessage(dlg->GetSafeHwnd(),WM_SEARCH_FINISHED,0,0);
-   PrintMessage(dlg->GetSafeHwnd(),L"Logging out...");
-   if(!m_api.Logout())
-     {
-      PrintMessage(dlg->GetSafeHwnd(),L"Log out failed.",MESSAGE_ERROR);
-      return(0);
-     }
-   CString    strText;
-   strText.Format(L"Found %d subtitles.",result_list.size());
-   PrintMessage(dlg->GetSafeHwnd(),strText);
+   else
+	   PrintMessage(dlg->GetSafeHwnd(), L"Input file is empty");
+
    return(0);
   }
 LRESULT COpenSubDlg::OnSearchFinished(WPARAM wParam, LPARAM lParam)
