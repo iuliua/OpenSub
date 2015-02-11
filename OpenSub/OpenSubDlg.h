@@ -36,6 +36,11 @@ private:
    static BOOL       Launch(LPCWSTR cmd, HANDLE *hProc=NULL);
    void              EnableButtons(BOOL);
    CString           m_lang;
+   CString           m_zip_tmp_file_path;
+   CString           m_sub_tmp_file_path;
+   CString           m_sub_tmp_file_name;
+   WCHAR             m_path[MAX_PATH];
+   
 private:
    OSApi::SubtitleInfoList m_result_list;
    void              UpdateList();

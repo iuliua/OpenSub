@@ -121,6 +121,14 @@ BOOL COpenSubDlg::OnInitDialog()
    m_cmb_match.SetCurSel(0);
 
    EnableButtons(FALSE);
+  
+   m_sub_tmp_file_name.Format(L"sub");
+   if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, m_path)))
+   {
+	   m_zip_tmp_file_path.Format(L"%s\\sub.zip", m_path);
+	   m_sub_tmp_file_path.Format(L"%s\\%s", m_path,m_sub_tmp_file_name);
+   };
+
 
 //--- start searching
    AfxBeginThread(ThreadSearchSub,this);
@@ -180,20 +188,20 @@ BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
     CString zip_exe_path=Read7ZipPath(); 
 	if (!zip_exe_path.IsEmpty())
 	{
-		::DeleteFile(L"C:\\sub.zip");
-		::DeleteFile(L"C:\\sub");
+		::DeleteFile(m_zip_tmp_file_path);
+		::DeleteFile(m_sub_tmp_file_path);
 		//--- download packed subtitles
-		if (URLDownloadToFile(NULL, sub_info.zip_link, L"c:\\sub.zip", 0, NULL) == S_OK)
+		if (SUCCEEDED(URLDownloadToFile(NULL, sub_info.zip_link, m_zip_tmp_file_path, 0, NULL)))
 		{
 			//--- unzip
 			WCHAR command[1024];
-			swprintf_s(command, sizeof(command) / sizeof(WCHAR), L"%s\\7z.exe e c:\\sub.zip -oc:\\ \"sub\" -y", zip_exe_path);
+			swprintf_s(command, sizeof(command) / sizeof(WCHAR), L"%s\\7z.exe e %s -o%s \"%s\" -y", zip_exe_path, m_zip_tmp_file_path,m_path,m_sub_tmp_file_name);
 			STARTUPINFO info = { 0 };
 			info.cb = sizeof(info);
 			info.dwFlags = STARTF_USESHOWWINDOW;
 			info.wShowWindow = SW_HIDE;
 			PROCESS_INFORMATION processInfo;
-			if (CreateProcess(NULL, command, NULL, NULL, TRUE, 0, NULL, L"C:\\", &info, &processInfo))
+			if (CreateProcess(NULL, command, NULL, NULL, TRUE, 0, NULL, NULL, &info, &processInfo))
 			{
 				DWORD exit_code = 0;
 				PrintMessage(GetSafeHwnd(), L"Unpacking...");
@@ -201,7 +209,7 @@ BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
 				if (!GetExitCodeProcess(processInfo.hProcess, &exit_code) || exit_code != 0)
 				{
 					PrintMessage(GetSafeHwnd(), L"Cannot unzip file.");
-					::DeleteFile(L"c:\\sub.zip");
+					::DeleteFile(m_zip_tmp_file_path);
 				}
 				CloseHandle(processInfo.hProcess);
 				CloseHandle(processInfo.hThread);
@@ -265,15 +273,15 @@ UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
 		   else
 		   {
 			   PrintMessage(dlg->GetSafeHwnd(), L"Moving subtitle...");
-			   if (!::MoveFile(L"c:\\sub", new_location))
+			   if (!::MoveFile(dlg->m_sub_tmp_file_path, new_location))
 				   PrintMessage(dlg->GetSafeHwnd(), L"Cannot move file.");
 			   else
 				   PrintMessage(dlg->GetSafeHwnd(), L"Done.");
 		   }
 	   }
 	   // cleanup
-	   ::DeleteFile(L"c:\\sub.zip");
-	   ::DeleteFile(L"c:\\sub");
+	   ::DeleteFile(dlg->m_zip_tmp_file_path);
+	   ::DeleteFile(dlg->m_sub_tmp_file_path);
 	   dlg->m_btn_download.EnableWindow(TRUE);
    }
    return(FALSE);
@@ -313,7 +321,7 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
 			//does an existing subtitle already available? then temporarily move it	
 			if ((subtitle_exists && ::MoveFile(existing_subtitle, temp_subtitle)) || !subtitle_exists)
 			{
-				if (::MoveFile(L"c:\\sub", existing_subtitle))
+				if (::MoveFile(dlg->m_sub_tmp_file_path, existing_subtitle))
 				{
 					if (Launch(file_info.file_full_name, &hProc))
 					{
@@ -346,8 +354,8 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
 				PrintMessage(dlg->GetSafeHwnd(), L"Cannot create temporary file.");
 		}
 		dlg->m_btn_play.EnableWindow(TRUE);
-		::DeleteFile(L"C:\\sub.zip");
-		::DeleteFile(L"C:\\sub");
+		::DeleteFile(dlg->m_zip_tmp_file_path);
+		::DeleteFile(dlg->m_sub_tmp_file_path);
 	}
     return(FALSE);
 }
@@ -542,7 +550,7 @@ void COpenSubDlg::OnBnClickedExplore()
    info.dwFlags = STARTF_USESHOWWINDOW;
    info.wShowWindow = SW_SHOW;
    PROCESS_INFORMATION processInfo;
-   if (CreateProcess(NULL, command, NULL, NULL, TRUE, 0, NULL, L"C:\\", &info, &processInfo))
+   if (CreateProcess(NULL, command, NULL, NULL, TRUE, 0, NULL, NULL, &info, &processInfo))
    {
 	   ::WaitForSingleObject(processInfo.hProcess, INFINITE);
 	   CloseHandle(processInfo.hProcess);
