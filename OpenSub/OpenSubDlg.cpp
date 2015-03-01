@@ -15,7 +15,8 @@
 //+------------------------------------------------------------------+
 COpenSubDlg::COpenSubDlg(CWnd *pParent)
    : CDialog(COpenSubDlg::IDD, pParent),
-     file_info(theApp.m_lpCmdLine)
+     file_info(theApp.m_lpCmdLine),
+	 m_should_exit(false)
   {
    m_hIcon=AfxGetApp()->LoadIcon(IDR_MAINFRAME);
   }
@@ -46,6 +47,7 @@ BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_BN_CLICKED(IDC_BUTTON2, &COpenSubDlg::OnBnClickedExplore)
    ON_BN_CLICKED(IDC_BUTTON3, &COpenSubDlg::OnBnClickedPlay)
    ON_BN_CLICKED(IDC_LINK_MAIN,&OnLinkClicked)
+   ON_NOTIFY(NM_DBLCLK, IDC_LIST1, &COpenSubDlg::OnNMDblclkList1)
 END_MESSAGE_MAP()
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -284,6 +286,8 @@ UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
 	   ::DeleteFile(dlg->m_sub_tmp_file_path);
 	   dlg->m_btn_download.EnableWindow(TRUE);
    }
+   if (dlg->m_should_exit)
+	   dlg->EndDialog(IDOK);
    return(FALSE);
   }
 // Test subtitle sequence
@@ -614,5 +618,13 @@ void COpenSubDlg::EnableButtons(BOOL flag)
 	m_cmb_match.EnableWindow(flag);
 	m_results_list_control.EnableWindow(flag);
 	m_link.EnableWindow(flag);
+}
+void COpenSubDlg::OnNMDblclkList1(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	*pResult = 0;
+	m_should_exit = true;
+	OnBnClickedDownload();
 }
 //+------------------------------------------------------------------+

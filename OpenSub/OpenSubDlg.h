@@ -40,6 +40,7 @@ private:
    CString           m_sub_tmp_file_path;
    CString           m_sub_tmp_file_name;
    WCHAR             m_path[MAX_PATH];
+   bool              m_should_exit;
    
 private:
    OSApi::SubtitleInfoList m_result_list;
@@ -65,5 +66,6 @@ public:
    afx_msg void      OnBnClickedExplore();
    afx_msg void      OnBnClickedPlay();
    CButton m_button_lang;
+   afx_msg void OnNMDblclkList1(NMHDR *pNMHDR, LRESULT *pResult);
 };
 //+------------------------------------------------------------------+
