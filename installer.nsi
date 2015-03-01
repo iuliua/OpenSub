@@ -14,20 +14,27 @@ RequestExecutionLevel admin
 
 ; Pages
 
-Page components
-Page directory
-Page instfiles
+;Page components
+;Page directory
+;Page instfiles
 
-UninstPage uninstConfirm
-UninstPage instfiles
+;UninstPage uninstConfirm
+;UninstPage instfiles
 
 ;--------------------------------
-Function .onInit
-ExecWait $INSTDIR\uninstall.exe
-FunctionEnd
 ; The stuff to install
 Section "Install"
   
+ SetRegView 64
+  ; Remove registry keys
+  DeleteRegKey HKCR '*\shell\OpenSubtitles.org'
+  DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\OSubAgent"
+  ; Remove files and uninstaller
+  Delete $INSTDIR\OpenSub.exe
+  Delete $INSTDIR\uninstall.exe
+  
+  RMDir "$INSTDIR"
+
   SetOutPath $INSTDIR
   File "Release\OpenSub.exe"
   SetRegView 64
