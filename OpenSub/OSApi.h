@@ -4,7 +4,7 @@
 //|                                        http://www.metaquotes.net |
 //+------------------------------------------------------------------+
 #include "stdafx.h"
-
+#include <string>
 #define _OSMETHOD_CALL "methodCall"
 #define _OSMETHOD_NAME "methodName"
 #define _OSPARAM       "param"
@@ -169,5 +169,6 @@ private:
    bool              ReadToken();
    bool              CheckResponseStatus();
    bool              ParseResultXml(SubtitleInfoList &result_list);
+   void              encode(std::wstring& data);
   };
 //+------------------------------------------------------------------+

@@ -16,8 +16,8 @@
 COpenSubDlg::COpenSubDlg(CWnd *pParent)
    : CDialog(COpenSubDlg::IDD, pParent),
      file_info(theApp.m_lpCmdLine),
-	 m_should_exit(false)
-  {
+	 m_should_exit(true)
+{
    m_hIcon=AfxGetApp()->LoadIcon(IDR_MAINFRAME);
   }
 //+------------------------------------------------------------------+
@@ -25,14 +25,15 @@ COpenSubDlg::COpenSubDlg(CWnd *pParent)
 //+------------------------------------------------------------------+
 void COpenSubDlg::DoDataExchange(CDataExchange* pDX)
   {
-	  CDialog::DoDataExchange(pDX);
-	  DDX_Control(pDX, IDC_LIST1, m_results_list_control);
-	  DDX_Control(pDX, IDC_COMBO2, m_cmb_match);
-	  DDX_Control(pDX, IDC_BUTTON1, m_btn_download);
-	  DDX_Control(pDX, IDC_BUTTON2, m_btn_explore);
-	  DDX_Control(pDX, IDC_BUTTON3, m_btn_play);
-	  DDX_Control(pDX, IDC_LINK_MAIN, m_link);
-	  DDX_Control(pDX, IDC_BUTTON4, m_button_lang);
+	CDialog::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_LIST1, m_results_list_control);
+	DDX_Control(pDX, IDC_BUTTON1, m_btn_download);
+	DDX_Control(pDX, IDC_BUTTON2, m_btn_explore);
+	DDX_Control(pDX, IDC_BUTTON3, m_btn_play);
+	DDX_Control(pDX, IDC_LINK_MAIN, m_link);
+	DDX_Control(pDX, IDC_BUTTON4, m_button_lang);
+	DDX_Control(pDX, IDC_RADIO_TEXT, m_text_match);
+	DDX_Control(pDX, IDC_RADIO_HASH, m_hash_match);
 }
 BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_WM_PAINT()
@@ -42,12 +43,12 @@ BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_MESSAGE(WM_SEARCH_FINISHED,OnSearchFinished)
    ON_MESSAGE(WM_COPYDATA,OnCopyData)
    ON_BN_CLICKED(IDC_BUTTON1, &COpenSubDlg::OnBnClickedDownload)
-   ON_CBN_SELCHANGE(IDC_COMBO1, &COpenSubDlg::OnCbnSelchangeCombo1)
-   ON_CBN_SELCHANGE(IDC_COMBO2, &COpenSubDlg::OnCbnSelchangeCombo1)
    ON_BN_CLICKED(IDC_BUTTON2, &COpenSubDlg::OnBnClickedExplore)
    ON_BN_CLICKED(IDC_BUTTON3, &COpenSubDlg::OnBnClickedPlay)
    ON_BN_CLICKED(IDC_LINK_MAIN,&OnLinkClicked)
    ON_NOTIFY(NM_DBLCLK, IDC_LIST1, &COpenSubDlg::OnNMDblclkList1)
+   ON_COMMAND(IDC_RADIO_HASH, &COpenSubDlg::OnRadioHash)
+   ON_COMMAND(IDC_RADIO_TEXT, &COpenSubDlg::OnRadioHash)
 END_MESSAGE_MAP()
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -118,9 +119,7 @@ BOOL COpenSubDlg::OnInitDialog()
    InitializeList();
    m_lang = L"eng";
    m_button_lang.SetWindowText(m_lang);
-   m_cmb_match.AddString(L"hash");
-   m_cmb_match.AddString(L"text");
-   m_cmb_match.SetCurSel(0);
+   m_hash_match.SetCheck(1);
 
    EnableButtons(FALSE);
   
@@ -414,7 +413,8 @@ LRESULT COpenSubDlg::OnSearchFinished(WPARAM wParam, LPARAM lParam)
    UpdateList();
    if (m_results_list_control.GetItemCount() == 0)
    {
-	   m_cmb_match.SetCurSel(m_cmb_match.GetCurSel()==1?0:1);
+	   m_text_match.SetCheck(1);
+	   m_hash_match.SetCheck(0);
 	   UpdateList();
    }
    EnableButtons(TRUE);
@@ -477,13 +477,6 @@ void COpenSubDlg::OnBnClickedDownload()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void COpenSubDlg::OnCbnSelchangeCombo1()
-  {
-   UpdateList();
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 int CALLBACK SortFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	CListCtrl* pListCtrl = (CListCtrl*)lParamSort;
@@ -508,38 +501,34 @@ int CALLBACK SortFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 void COpenSubDlg::UpdateList()
   {
    m_results_list_control.DeleteAllItems();
-   for(size_t i=0;i<m_result_list.size();i++)
-     {
-      OSApi::subtitle_info data=m_result_list[i];
-      int index=m_results_list_control.GetItemCount();
+   for (size_t i = 0; i < m_result_list.size(); i++)
+   {
+	   OSApi::subtitle_info data = m_result_list[i];
+	   int index = m_results_list_control.GetItemCount();
 
-      int idx_match=m_cmb_match.GetCurSel();
-      if(idx_match>=0)
-        {
-         CString str_lang,str_match;
-         m_button_lang.GetWindowText(str_lang);
-         m_cmb_match.GetLBText(idx_match,str_match);
-		 if (str_match == L"hash")
-			 str_match = L"moviehash";
-		 else
-			 if (str_match == L"text")
-				 str_match = L"fulltext";
-         if(wcscmp(data.lang,str_lang)!=0||wcscmp(data.matched_by,str_match)!=0)
-            continue;
-        }
-	  
-      LVITEM lvItem;
-      int nItem;
-	  
-      lvItem.mask=LVIF_TEXT|LVIF_PARAM;
-      lvItem.iItem=index;
-      lvItem.iSubItem=0;
-      lvItem.pszText=data.sub_download_count;
-      lvItem.lParam=i;
-      nItem=m_results_list_control.InsertItem(&lvItem);
+	   CString str_lang, str_match;
+	   m_button_lang.GetWindowText(str_lang);
+	   GetMatchingMethod(str_match);
+	   if (str_match == L"hash")
+		   str_match = L"moviehash";
+	   else
+		   if (str_match == L"text")
+			   str_match = L"fulltext";
+	   if (wcscmp(data.lang, str_lang) != 0 || wcscmp(data.matched_by, str_match) != 0)
+		   continue;
 
-      m_results_list_control.SetItemText(nItem,1,data.mov_release_name);
-     }
+	   LVITEM lvItem;
+	   int nItem;
+
+	   lvItem.mask = LVIF_TEXT | LVIF_PARAM;
+	   lvItem.iItem = index;
+	   lvItem.iSubItem = 0;
+	   lvItem.pszText = data.sub_download_count;
+	   lvItem.lParam = i;
+	   nItem = m_results_list_control.InsertItem(&lvItem);
+
+	   m_results_list_control.SetItemText(nItem, 1, data.mov_release_name);
+   }
    m_results_list_control.SortItemsEx(&SortFunc, (LPARAM)&m_results_list_control);
   }
 //+------------------------------------------------------------------+
@@ -568,24 +557,27 @@ void COpenSubDlg::OnBnClickedPlay()
 {
    AfxBeginThread(ThreadTestSub,this);
 }
+void COpenSubDlg::GetMatchingMethod(CString &str)
+{
+	if (m_hash_match.GetCheck())
+		str.Format(L"hash");
+	if (m_text_match.GetCheck())
+		str.Format(L"text");
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 void COpenSubDlg::OnLinkClicked()
 {
-   int idx_match=m_cmb_match.GetCurSel();
-   if(idx_match>=0)
-   {
-      CString str_lang,str_match;
-      CString str;
-      m_button_lang.GetWindowText(str_lang);
-      m_cmb_match.GetLBText(idx_match,str_match);
-      if(wcscmp(str_match,L"text")==0)
-         str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviename-%s",(LPCWSTR)str_lang,file_info.file_name_no_extension);
-      if(wcscmp(str_match,L"hash")==0)
-         str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviebytesize-%s/moviehash-%s",(LPCWSTR)str_lang,file_info.file_size,file_info.file_hash);
-	  Launch(str);
-   }
+	CString str_lang, str_match;
+	CString str;
+	m_button_lang.GetWindowText(str_lang);
+	GetMatchingMethod(str_match);
+	if (wcscmp(str_match, L"text") == 0)
+		str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviename-%s", (LPCWSTR)str_lang, file_info.file_name_no_extension);
+	if (wcscmp(str_match, L"hash") == 0)
+		str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviebytesize-%s/moviehash-%s", (LPCWSTR)str_lang, file_info.file_size, file_info.file_hash);
+	Launch(str);
 }
 BOOL COpenSubDlg::Launch(LPCWSTR cmd,HANDLE *hProc)
 {
@@ -615,7 +607,8 @@ void COpenSubDlg::EnableButtons(BOOL flag)
 	m_btn_explore.EnableWindow(flag);
 	m_btn_play.EnableWindow(flag);
 	m_button_lang.EnableWindow(flag);
-	m_cmb_match.EnableWindow(flag);
+	m_hash_match.EnableWindow(flag);
+	m_text_match.EnableWindow(flag);
 	m_results_list_control.EnableWindow(flag);
 	m_link.EnableWindow(flag);
 }
@@ -628,3 +621,10 @@ void COpenSubDlg::OnNMDblclkList1(NMHDR *pNMHDR, LRESULT *pResult)
 	OnBnClickedDownload();
 }
 //+------------------------------------------------------------------+
+
+void COpenSubDlg::OnRadioHash()
+{
+	// TODO: Add your command handler code here
+	UpdateList();
+}
+

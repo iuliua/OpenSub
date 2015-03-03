@@ -47,8 +47,8 @@ private:
    void              UpdateList();
    BOOL              DownloadAndUnzip(OSApi::subtitle_info &item);
    BOOL              GetSubInfo(OSApi::subtitle_info& sub_info);
+   void              GetMatchingMethod(CString &);
 public:
-   afx_msg void      OnLbnSelchangeList2();
    afx_msg void      OnSysCommand(UINT nID,LPARAM lParam);
 private:
    CListCtrl         m_results_list_control;
@@ -57,8 +57,6 @@ public:
    afx_msg void      OnBnClickedDownload();
    afx_msg void      OnLinkClicked();
    afx_msg void      OnLinkClicked2();
-   afx_msg void      OnCbnSelchangeCombo1();
-   CComboBox         m_cmb_match;
    CButton           m_btn_download;
    CButton           m_btn_explore;
    CButton           m_btn_play;
@@ -67,5 +65,8 @@ public:
    afx_msg void      OnBnClickedPlay();
    CButton m_button_lang;
    afx_msg void OnNMDblclkList1(NMHDR *pNMHDR, LRESULT *pResult);
+   CButton m_text_match;
+   CButton m_hash_match;
+   afx_msg void OnRadioHash();
 };
 //+------------------------------------------------------------------+

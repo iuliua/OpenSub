@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "OSApi.h"
+#include <string>
+using namespace std;
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -134,6 +136,7 @@ bool OSApi::Login()
 bool OSApi::SearchSubtitle(LPCWSTR file_name_no_extension,LPCWSTR file_size,LPCWSTR file_hash,SubtitleInfoList &result_list)
   {
    bool res;
+   Sleep(3000);
    BuildSearchXml(file_name_no_extension,file_size,file_hash);
    res=SendRequest();
    res=res&&ParseResultXml(result_list);
@@ -187,10 +190,26 @@ void OSApi::BuildSearchXml(LPCWSTR file_name_no_extension,LPCWSTR file_size,LPCW
 
    member_node=struct_node.append_child(_OSMEMBER);
    member_node.append_child(_OSNAME).append_child(node_pcdata).set_value("query");
+
    member_node.append_child(_OSVALUE).append_child(_OSSTRING).append_child(node_pcdata).set_value(conv.ToUTF8(file_name_no_extension));
 //--- 
    xml_doc.save(xml_writer,"\t",format_default,encoding_utf8);
   }
+void OSApi::encode(std::wstring& data) {
+	std::wstring buffer;
+	buffer.reserve(data.size());
+	for (size_t pos = 0; pos != data.size(); ++pos) {
+		switch (data[pos]) {
+		case L'&':  buffer.append(L"&amp;");       break;
+		case L'\"': buffer.append(L"&quot;");      break;
+		case L'\'': buffer.append(L"&apos;");      break;
+		case L'<':  buffer.append(L"&lt;");        break;
+		case L'>':  buffer.append(L"&gt;");        break;
+		default:   buffer.append(&data[pos], 1); break;
+		}
+	}
+	data.swap(buffer);
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
