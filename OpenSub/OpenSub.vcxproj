@@ -148,6 +148,7 @@ copy $(SolutionDir)OSubAgent.exe "$(HOMEDRIVE)$(HOMEPATH)\Google Drive"</Command
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\Images\favicon.ico" />
+    <Image Include="..\images\icon1.ico" />
     <Image Include="..\Images\logo.bmp" />
     <Image Include="res\OpenSub.ico" />
   </ItemGroup>
