@@ -22,15 +22,13 @@
 #include <afxwin.h>         // MFC core and standard components
 #include <afxext.h>         // MFC extensions
 
-#include "pugixml.hpp"
 #include <vector>
 #include <new.h>
 #include <wininet.h>
 #include "OpenSub.h"
 #include "LinkStaticControl.h"
-
-using namespace pugi;
-#define WM_SEARCH_FINISHED    WM_APP + 0x10
+#include "IOpenSubtitlesAPI.h"
+#include "Tools.h"
 
 #ifndef _AFX_NO_OLE_SUPPORT
 #include <afxdtctl.h>           // MFC support for Internet Explorer 4 Common Controls

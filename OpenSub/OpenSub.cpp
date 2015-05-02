@@ -26,6 +26,7 @@ COpenSubApp::COpenSubApp()
 // The one and only COpenSubApp object
 
 COpenSubApp theApp;
+COpenSubtitlesAPIFactory factory;
 
 // COpenSubApp initialization
 
@@ -46,7 +47,10 @@ BOOL COpenSubApp::InitInstance()
    SetRegistryKey(L"Local AppWizard-Generated Applications");
 
    COpenSubDlg dlg;
-   m_pMainWnd=&dlg;
+   m_pMainWnd = &dlg;
+   IOpenSubtitlesAPI* osub_api=NULL;
+   factory.Create(L"", L"", L"JulianOS", &dlg,&osub_api);
+   osub_api->Search(m_lpCmdLine);
    INT_PTR nResponse=dlg.DoModal();
    if (nResponse==IDOK)
      {
@@ -56,7 +60,6 @@ BOOL COpenSubApp::InitInstance()
         {
 
         }
-
    return(FALSE);
   }
 //+------------------------------------------------------------------+

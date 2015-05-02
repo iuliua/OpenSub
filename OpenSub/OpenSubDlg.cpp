@@ -7,15 +7,8 @@
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-#ifdef _DEBUG
-#define new DEBUG_NEW
-#endif
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 COpenSubDlg::COpenSubDlg(CWnd *pParent)
    : CDialog(COpenSubDlg::IDD, pParent),
-     file_info(theApp.m_lpCmdLine),
 	 m_should_exit(true)
 {
    m_hIcon=AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -40,7 +33,6 @@ BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_WM_QUERYDRAGICON()
    //}}AFX_MSG_MAP
 	ON_WM_SYSCOMMAND()
-   ON_MESSAGE(WM_SEARCH_FINISHED,OnSearchFinished)
    ON_MESSAGE(WM_COPYDATA,OnCopyData)
    ON_BN_CLICKED(IDC_BUTTON1, &COpenSubDlg::OnBnClickedDownload)
    ON_BN_CLICKED(IDC_BUTTON2, &COpenSubDlg::OnBnClickedExplore)
@@ -50,9 +42,7 @@ BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_COMMAND(IDC_RADIO_HASH, &COpenSubDlg::OnRadioHash)
    ON_COMMAND(IDC_RADIO_TEXT, &COpenSubDlg::OnRadioHash)
 END_MESSAGE_MAP()
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+
 void COpenSubDlg::InitializeList()
   {
    m_results_list_control.SetExtendedStyle(LVS_EX_FULLROWSELECT|LVS_EX_AUTOSIZECOLUMNS);
@@ -68,25 +58,11 @@ void COpenSubDlg::InitializeList()
 
    lvColumn.mask=LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
    lvColumn.fmt=LVCFMT_LEFT;
-   lvColumn.cx=750;
+   lvColumn.cx=660;
    lvColumn.pszText=L"Name";
    nCol=m_results_list_control.InsertColumn(1, &lvColumn);
   }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-void COpenSubDlg::SetTitle()
-  {
-   CString       str;
-   if(file_info.file_size[0]>0)
-     {
-      str.Format(L"OpenSub - %s",file_info.file_name);
-      SetWindowText(str);
-     }
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+
 BOOL COpenSubDlg::OnInitDialog()
   {
    CDialog::OnInitDialog();
@@ -114,30 +90,16 @@ BOOL COpenSubDlg::OnInitDialog()
    SetIcon(m_hIcon, TRUE);         // Set big icon
    SetIcon(m_hIcon, FALSE);      // Set small icon
 //--- set dialog title
-   SetTitle();
+   std::wstring path(theApp.m_lpCmdLine);
+   SetWindowText(path.substr(path.rfind(L'\\') + 1).c_str());
 //--- create list columns
    InitializeList();
-   m_lang = L"eng";
-   m_button_lang.SetWindowText(m_lang);
+   m_button_lang.SetWindowText(L"eng");
    m_hash_match.SetCheck(1);
-
    EnableButtons(FALSE);
-  
-   m_sub_tmp_file_name.Format(L"sub");
-   if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, m_path)))
-   {
-	   m_zip_tmp_file_path.Format(L"%s\\sub.zip", m_path);
-	   m_sub_tmp_file_path.Format(L"%s\\%s", m_path,m_sub_tmp_file_name);
-   };
-
-
-//--- start searching
-   AfxBeginThread(ThreadSearchSub,this);
    return(TRUE);
   }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+
 void COpenSubDlg::PrintMessage(HWND handle,LPCWSTR msg)
   {
    COPYDATASTRUCT cds;
@@ -145,110 +107,20 @@ void COpenSubDlg::PrintMessage(HWND handle,LPCWSTR msg)
    cds.lpData=(PVOID)msg;
    ::SendMessage(handle,WM_COPYDATA,0,(LPARAM)(LPVOID)&cds);
   }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+
 LRESULT COpenSubDlg::OnCopyData(WPARAM wParam, LPARAM lParam)
 {
     PCOPYDATASTRUCT pcds=(PCOPYDATASTRUCT)lParam;
     GetDlgItem(IDC_STATIC)->SetWindowText((LPCWSTR)pcds->lpData);
     return(0);
 }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-CString COpenSubDlg::Read7ZipPath()
+
+BOOL COpenSubDlg::DownloadAndUnzip(LPCWSTR zip_link)
 {
-    CString cSvar = L"";
-    HKEY hKey;
-    if (::RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\7-Zip",0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-    {
-        WCHAR szData[256];
-        DWORD dwKeyDataType;
-        DWORD dwDataBufSize = 256;
-        if (::RegQueryValueEx(hKey, L"Path", NULL, &dwKeyDataType,
-            (LPBYTE) &szData, &dwDataBufSize) == ERROR_SUCCESS)
-        {
-            switch ( dwKeyDataType )
-            {
-            case REG_SZ:
-                cSvar = CString(szData);
-                break;
-            }
-        }
-        ::RegCloseKey( hKey );
-    }
-    return cSvar;
+  PrintMessage(GetSafeHwnd(), L"downloading...");
+  return TRUE;
 }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-BOOL COpenSubDlg::DownloadAndUnzip(OSApi::subtitle_info &sub_info)
-{
-    //--- get path of 7zip executable
-    CString zip_exe_path=Read7ZipPath(); 
-	if (!zip_exe_path.IsEmpty())
-	{
-		::DeleteFile(m_zip_tmp_file_path);
-		::DeleteFile(m_sub_tmp_file_path);
-		//--- download packed subtitles
-		if (SUCCEEDED(URLDownloadToFile(NULL, sub_info.zip_link, m_zip_tmp_file_path, 0, NULL)))
-		{
-			//--- unzip
-			WCHAR command[1024];
-			swprintf_s(command, sizeof(command) / sizeof(WCHAR), L"%s\\7z.exe e %s -o%s \"%s\" -y", zip_exe_path, m_zip_tmp_file_path,m_path,m_sub_tmp_file_name);
-			STARTUPINFO info = { 0 };
-			info.cb = sizeof(info);
-			info.dwFlags = STARTF_USESHOWWINDOW;
-			info.wShowWindow = SW_HIDE;
-			PROCESS_INFORMATION processInfo;
-			if (CreateProcess(NULL, command, NULL, NULL, TRUE, 0, NULL, NULL, &info, &processInfo))
-			{
-				DWORD exit_code = 0;
-				PrintMessage(GetSafeHwnd(), L"Unpacking...");
-				::WaitForSingleObject(processInfo.hProcess, 5000);
-				if (!GetExitCodeProcess(processInfo.hProcess, &exit_code) || exit_code != 0)
-				{
-					PrintMessage(GetSafeHwnd(), L"Cannot unzip file.");
-					::DeleteFile(m_zip_tmp_file_path);
-				}
-				CloseHandle(processInfo.hProcess);
-				CloseHandle(processInfo.hThread);
-			}
-		}
-		else
-		{
-			PrintMessage(GetSafeHwnd(), L"Download failed.");
-			return FALSE;
-		}
-	}
-	else
-	{
-		PrintMessage(GetSafeHwnd(), L"7-Zip not installed.");
-		return FALSE;
-	}
-    return TRUE;
-}
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-BOOL COpenSubDlg::GetSubInfo(OSApi::subtitle_info& sub_info)
-{
-    //--- get info on selected item
-    int selected_item=m_results_list_control.GetNextItem(-1,LVNI_SELECTED);
-    if(selected_item==-1)
-        return(FALSE);
-    LVITEM item={0};
-    item.mask=LVIF_PARAM;
-    item.iItem=selected_item;
-    if(!m_results_list_control.GetItem(&item))
-        return(FALSE);
-    sub_info=m_result_list[item.lParam];
-    return(TRUE);
-}
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+/*
 UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
   {
 
@@ -361,65 +233,7 @@ UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
 		::DeleteFile(dlg->m_sub_tmp_file_path);
 	}
     return(FALSE);
-}
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-UINT COpenSubDlg::ThreadSearchSub(LPVOID pvParam)
-  {
-   COpenSubDlg            *dlg=(COpenSubDlg*)pvParam;
-   OSApi::SubtitleInfoList result_list;
-   InputFileInfo          &file_info=dlg->file_info;
-   OSApi                   m_api(L"",L"",dlg->m_lang,L"JulianOS");
-
-   if (file_info.file_size[0] > 0)
-   {
-	   if (m_api.IsValid())
-	   {
-		   PrintMessage(dlg->GetSafeHwnd(), L"Logging in...");
-		   if (m_api.Login())
-		   {
-			   PrintMessage(dlg->GetSafeHwnd(), L"Searching...");
-			   if (m_api.SearchSubtitle(file_info.file_name_no_extension, file_info.file_size, file_info.file_hash, result_list))
-			   {
-				   dlg->m_result_list = result_list;
-				   ::PostMessage(dlg->GetSafeHwnd(), WM_SEARCH_FINISHED, 0, 0);
-				   PrintMessage(dlg->GetSafeHwnd(), L"Logging out...");
-				   if (m_api.Logout())
-				   {
-					   CString    strText;
-					   strText.Format(L"Found %d subtitles.", result_list.size());
-					   PrintMessage(dlg->GetSafeHwnd(), strText);
-				   }
-				   else
-					   PrintMessage(dlg->GetSafeHwnd(), L"Log out failed.");
-			   }
-			   else
-				   PrintMessage(dlg->GetSafeHwnd(), L"Search failed.");
-		   }
-		   else
-			   PrintMessage(dlg->GetSafeHwnd(), L"Log in failed.");
-	   }
-	   else
-		   PrintMessage(dlg->GetSafeHwnd(), L"Failed to start api.");
-   }
-   else
-	   PrintMessage(dlg->GetSafeHwnd(), L"Input file is empty");
-
-   return(0);
-  }
-LRESULT COpenSubDlg::OnSearchFinished(WPARAM wParam, LPARAM lParam)
-  {
-   UpdateList();
-   if (m_results_list_control.GetItemCount() == 0)
-   {
-	   m_text_match.SetCheck(1);
-	   m_hash_match.SetCheck(0);
-	   UpdateList();
-   }
-   EnableButtons(TRUE);
-   return(0);
-  }
+}*/
 void COpenSubDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
    if ((nID & 0xFFF0) == IDM_ABOUTBOX)
@@ -456,27 +270,16 @@ void COpenSubDlg::OnPaint()
       CDialog::OnPaint();
      }
   }
-
 // The system calls this function to obtain the cursor to display while the user drags
 //  the minimized window.
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 HCURSOR COpenSubDlg::OnQueryDragIcon()
-  {
-   return static_cast<HCURSOR>(m_hIcon);
-  }
+{
+	return static_cast<HCURSOR>(m_hIcon);
+}
 
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-void COpenSubDlg::OnBnClickedDownload()
-  {
-   AfxBeginThread(ThreadDownload,this);
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 int CALLBACK SortFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	CListCtrl* pListCtrl = (CListCtrl*)lParamSort;
@@ -495,49 +298,14 @@ int CALLBACK SortFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 
 	return result*-1;
 }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-void COpenSubDlg::UpdateList()
+void COpenSubDlg::OnBnClickedDownload()
   {
-   m_results_list_control.DeleteAllItems();
-   for (size_t i = 0; i < m_result_list.size(); i++)
-   {
-	   OSApi::subtitle_info data = m_result_list[i];
-	   int index = m_results_list_control.GetItemCount();
-
-	   CString str_lang, str_match;
-	   m_button_lang.GetWindowText(str_lang);
-	   GetMatchingMethod(str_match);
-	   if (str_match == L"hash")
-		   str_match = L"moviehash";
-	   else
-		   if (str_match == L"text")
-			   str_match = L"fulltext";
-	   if (wcscmp(data.lang, str_lang) != 0 || wcscmp(data.matched_by, str_match) != 0)
-		   continue;
-
-	   LVITEM lvItem;
-	   int nItem;
-
-	   lvItem.mask = LVIF_TEXT | LVIF_PARAM;
-	   lvItem.iItem = index;
-	   lvItem.iSubItem = 0;
-	   lvItem.pszText = data.sub_download_count;
-	   lvItem.lParam = i;
-	   nItem = m_results_list_control.InsertItem(&lvItem);
-
-	   m_results_list_control.SetItemText(nItem, 1, data.mov_release_name);
-   }
-   m_results_list_control.SortItemsEx(&SortFunc, (LPARAM)&m_results_list_control);
   }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+
 void COpenSubDlg::OnBnClickedExplore()
   {
    WCHAR command[512];
-   swprintf_s(command, sizeof(command) / sizeof(WCHAR), L"explorer /select,%s", file_info.file_full_name);
+   swprintf_s(command, sizeof(command) / sizeof(WCHAR), L"explorer /select,%s", theApp.m_lpCmdLine);
    STARTUPINFO info = { 0 };
    info.cb = sizeof(info);
    info.dwFlags = STARTF_USESHOWWINDOW;
@@ -550,12 +318,9 @@ void COpenSubDlg::OnBnClickedExplore()
 	   CloseHandle(processInfo.hThread);
    }
   }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 void COpenSubDlg::OnBnClickedPlay()
 {
-   AfxBeginThread(ThreadTestSub,this);
+   //AfxBeginThread(ThreadTestSub,this);
 }
 void COpenSubDlg::GetMatchingMethod(CString &str)
 {
@@ -564,9 +329,6 @@ void COpenSubDlg::GetMatchingMethod(CString &str)
 	if (m_text_match.GetCheck())
 		str.Format(L"text");
 }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 void COpenSubDlg::OnLinkClicked()
 {
 	CString str_lang, str_match;
@@ -574,9 +336,9 @@ void COpenSubDlg::OnLinkClicked()
 	m_button_lang.GetWindowText(str_lang);
 	GetMatchingMethod(str_match);
 	if (wcscmp(str_match, L"text") == 0)
-		str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviename-%s", (LPCWSTR)str_lang, file_info.file_name_no_extension);
+		str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviename-%s", (LPCWSTR)str_lang, m_api->GetFileNameNoExt(theApp.m_lpCmdLine).c_str());
 	if (wcscmp(str_match, L"hash") == 0)
-		str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviebytesize-%s/moviehash-%s", (LPCWSTR)str_lang, file_info.file_size, file_info.file_hash);
+		str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviebytesize-%s/moviehash-%s", (LPCWSTR)str_lang, m_api->GetFileSize(theApp.m_lpCmdLine).c_str(),m_api->GetFileHash(theApp.m_lpCmdLine).c_str());
 	Launch(str);
 }
 BOOL COpenSubDlg::Launch(LPCWSTR cmd,HANDLE *hProc)
@@ -615,16 +377,41 @@ void COpenSubDlg::EnableButtons(BOOL flag)
 void COpenSubDlg::OnNMDblclkList1(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-	// TODO: Add your control notification handler code here
 	*pResult = 0;
 	m_should_exit = true;
 	OnBnClickedDownload();
 }
-//+------------------------------------------------------------------+
 
 void COpenSubDlg::OnRadioHash()
 {
-	// TODO: Add your command handler code here
-	UpdateList();
 }
 
+void COpenSubDlg::OnError(std::wstring error_details)
+{
+	MessageBox(error_details.c_str(), L"error", MB_OK);
+}
+
+void COpenSubDlg::OnSubtitle(std::wstring name, std::wstring download_count, std::wstring zip_link)
+{
+	LVITEM lvItem = { 0 };
+
+	lvItem.mask = LVIF_TEXT | LVIF_PARAM;
+	lvItem.iItem = 0;
+	lvItem.iSubItem = 0;
+	lvItem.pszText = const_cast<LPWSTR>(download_count.c_str());
+	lvItem.lParam = (LPARAM)(new(std::nothrow) std::wstring(zip_link));
+
+	m_results_list_control.InsertItem(&lvItem);
+	m_results_list_control.SetItemText(0, 1, name.c_str());
+	m_results_list_control.SortItemsEx(&SortFunc, (LPARAM)&m_results_list_control);
+}
+
+void COpenSubDlg::OnSearchFinish()
+{
+	EnableButtons(TRUE);
+}
+
+void COpenSubDlg::OnApiReady(IOpenSubtitlesAPI* api)
+{
+	m_api = api;
+}

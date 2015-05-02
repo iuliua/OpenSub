@@ -1,16 +1,10 @@
 #pragma once
-#include "afxwin.h"
-#include "inputfileinfo.h"
-#include "OSApi.h"
-#include "afxcmn.h"
 
-// COpenSubDlg dialog
-class COpenSubDlg : public CDialog
+class COpenSubDlg : public CDialog,public IEventListener
   {
 
 public:
-                     COpenSubDlg(CWnd *pParent=NULL);
-
+   COpenSubDlg(CWnd *pParent=NULL);
    enum { IDD=IDD_OPENSUB_DIALOG };
 
 protected:
@@ -18,41 +12,29 @@ protected:
 
 protected:
    HICON             m_hIcon;
-
    virtual BOOL      OnInitDialog();
    afx_msg void      OnPaint();
    afx_msg HCURSOR   OnQueryDragIcon();
    DECLARE_MESSAGE_MAP()
+
 private:
-   LRESULT           OnSearchFinished(WPARAM wParam, LPARAM lParam);
    LRESULT           OnCopyData(WPARAM wParam, LPARAM lParam);
-   static UINT       ThreadSearchSub(LPVOID pvParam);
-   static UINT       ThreadDownload(LPVOID pvParam);
-   static UINT       ThreadTestSub(LPVOID pvParam);
+   //static UINT       ThreadDownload(LPVOID pvParam);
+   //static UINT       ThreadTestSub(LPVOID pvParam);
    static void       PrintMessage(HWND handle, LPCWSTR msg);
    void              InitializeList();
-   void              SetTitle();
-   static CString    Read7ZipPath();
    static BOOL       Launch(LPCWSTR cmd, HANDLE *hProc=NULL);
    void              EnableButtons(BOOL);
-   CString           m_lang;
-   CString           m_zip_tmp_file_path;
-   CString           m_sub_tmp_file_path;
-   CString           m_sub_tmp_file_name;
-   WCHAR             m_path[MAX_PATH];
    bool              m_should_exit;
+   IOpenSubtitlesAPI *m_api;
    
 private:
-   OSApi::SubtitleInfoList m_result_list;
-   void              UpdateList();
-   BOOL              DownloadAndUnzip(OSApi::subtitle_info &item);
-   BOOL              GetSubInfo(OSApi::subtitle_info& sub_info);
+   BOOL              DownloadAndUnzip(LPCWSTR);
    void              GetMatchingMethod(CString &);
 public:
    afx_msg void      OnSysCommand(UINT nID,LPARAM lParam);
 private:
    CListCtrl         m_results_list_control;
-   InputFileInfo     file_info;
 public:
    afx_msg void      OnBnClickedDownload();
    afx_msg void      OnLinkClicked();
@@ -68,5 +50,15 @@ public:
    CButton m_text_match;
    CButton m_hash_match;
    afx_msg void OnRadioHash();
+
+   virtual void OnError(std::wstring error_details) override;
+   virtual void OnSubtitle(std::wstring name, std::wstring download_count, std::wstring zip_link) override;
+
+   virtual void OnSearchFinish() override;
+
+   virtual void OnApiReady(IOpenSubtitlesAPI* api) override;
+
 };
+
+
 //+------------------------------------------------------------------+
