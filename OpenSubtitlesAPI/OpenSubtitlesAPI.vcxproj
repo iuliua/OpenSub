@@ -58,7 +58,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(TargetPath) $(ProjectDir)\redistribute
+      <Command>mkdir $(ProjectDir)\redistribute
+copy $(TargetPath) $(ProjectDir)\redistribute
 copy $(ProjectDir)\IOpenSubtitlesAPI.h $(ProjectDir)\redistribute</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
