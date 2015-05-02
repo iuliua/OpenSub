@@ -67,7 +67,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>c:\Projects\temporary\trunk\OpenSubtitlesAPI\redistribute\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\OpenSubtitlesAPI\redistribute\;..\..\..\CodeLibrary\trunk\Tools\</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -78,7 +78,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>c:\Projects\temporary\trunk\OpenSubtitlesAPI\redistribute\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\OpenSubtitlesAPI\redistribute\</AdditionalLibraryDirectories>
       <AdditionalDependencies>OpenSubtitlesAPI.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
