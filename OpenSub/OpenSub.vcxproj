@@ -127,6 +127,7 @@ copy $(SolutionDir)OSubAgent.exe "$(HOMEDRIVE)$(HOMEPATH)\Google Drive"</Command
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\CodeLibrary\trunk\Tools\zip\unzip.cpp" />
     <ClCompile Include="AboutDialog.cpp" />
     <ClCompile Include="LinkStaticControl.cpp" />
     <ClCompile Include="OpenSub.cpp" />
@@ -137,6 +138,7 @@ copy $(SolutionDir)OSubAgent.exe "$(HOMEDRIVE)$(HOMEPATH)\Google Drive"</Command
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\CodeLibrary\trunk\Tools\zip\unzip.h" />
     <ClInclude Include="AboutDialog.h" />
     <ClInclude Include="LinkStaticControl.h" />
     <ClInclude Include="OpenSub.h" />

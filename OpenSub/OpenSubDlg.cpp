@@ -38,7 +38,7 @@ BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_BN_CLICKED(IDC_BUTTON2, &COpenSubDlg::OnBnClickedExplore)
    ON_BN_CLICKED(IDC_BUTTON3, &COpenSubDlg::OnBnClickedPlay)
    ON_BN_CLICKED(IDC_LINK_MAIN,&OnLinkClicked)
-   ON_NOTIFY(NM_DBLCLK, IDC_LIST1, &COpenSubDlg::OnNMDblclkList1)
+   ON_NOTIFY(NM_DBLCLK, IDC_LIST1, &COpenSubDlg::OnDoubleClickSubtitle)
    ON_COMMAND(IDC_RADIO_HASH, &COpenSubDlg::OnRadioHash)
    ON_COMMAND(IDC_RADIO_TEXT, &COpenSubDlg::OnRadioHash)
 END_MESSAGE_MAP()
@@ -374,11 +374,44 @@ void COpenSubDlg::EnableButtons(BOOL flag)
 	m_results_list_control.EnableWindow(flag);
 	m_link.EnableWindow(flag);
 }
-void COpenSubDlg::OnNMDblclkList1(NMHDR *pNMHDR, LRESULT *pResult)
+void COpenSubDlg::OnDoubleClickSubtitle(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	*pResult = 0;
 	m_should_exit = true;
+
+	//--- get info on selected item
+	int selected_item = m_results_list_control.GetNextItem(-1, LVNI_SELECTED);
+	LVITEM item = { 0 };
+	item.mask = LVIF_PARAM;
+	item.iItem = selected_item;
+	m_results_list_control.GetItem(&item);
+
+	std::wstring &format_and_link = *((std::wstring*)(item.lParam));
+	std::wstring format=format_and_link.substr(0,format_and_link.find_first_of(L','));
+	std::wstring link = format_and_link.substr(format_and_link.find_first_of(L',')+1);
+	std::wstring zip_name = link.substr(link.rfind(L"/") + 1);
+
+	Tools::SetCurrDirToModuleLocation(m_api->GetFileDirectory(theApp.m_lpCmdLine).c_str());
+	URLDownloadToFile(NULL, link.c_str(), zip_name.c_str(), NULL, NULL);
+
+	HZIP hz = OpenZip(zip_name.c_str(),0);
+	ZIPENTRY ze; GetZipItem(hz, -1, &ze); int numitems = ze.index;
+	for (int i = 0; i < numitems; i++)
+	{
+		GetZipItem(hz, i, &ze);
+		std::wstring tmp = std::wstring(ze.name).substr(std::wstring(ze.name).rfind(L'.') + 1);
+		if (std::wstring(ze.name).substr(std::wstring(ze.name).rfind(L'.') + 1).compare(format) == 0)
+		{
+			char* buffer = new char[ze.unc_size];
+			UnzipItem(hz, i, buffer,ze.unc_size);
+			std::ofstream out((m_api->GetFileNameNoExt(theApp.m_lpCmdLine) + L'.' + format).c_str(),std::ios::binary);
+			out.write(buffer, ze.unc_size);
+			out.close();
+		}
+	}
+	CloseZip(hz);
+	DeleteFile(zip_name.c_str());
 	OnBnClickedDownload();
 }
 
@@ -391,7 +424,7 @@ void COpenSubDlg::OnError(std::wstring error_details)
 	MessageBox(error_details.c_str(), L"error", MB_OK);
 }
 
-void COpenSubDlg::OnSubtitle(std::wstring name, std::wstring download_count, std::wstring zip_link)
+void COpenSubDlg::OnSubtitle(std::wstring name, std::wstring download_count, std::wstring zip_link,std::wstring format)
 {
 	LVITEM lvItem = { 0 };
 
@@ -399,7 +432,7 @@ void COpenSubDlg::OnSubtitle(std::wstring name, std::wstring download_count, std
 	lvItem.iItem = 0;
 	lvItem.iSubItem = 0;
 	lvItem.pszText = const_cast<LPWSTR>(download_count.c_str());
-	lvItem.lParam = (LPARAM)(new(std::nothrow) std::wstring(zip_link));
+	lvItem.lParam = (LPARAM)(new(std::nothrow) std::wstring(format+L","+zip_link));
 
 	m_results_list_control.InsertItem(&lvItem);
 	m_results_list_control.SetItemText(0, 1, name.c_str());

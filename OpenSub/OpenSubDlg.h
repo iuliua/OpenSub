@@ -46,13 +46,13 @@ public:
    afx_msg void      OnBnClickedExplore();
    afx_msg void      OnBnClickedPlay();
    CButton m_button_lang;
-   afx_msg void OnNMDblclkList1(NMHDR *pNMHDR, LRESULT *pResult);
+   afx_msg void OnDoubleClickSubtitle(NMHDR *pNMHDR, LRESULT *pResult);
    CButton m_text_match;
    CButton m_hash_match;
    afx_msg void OnRadioHash();
 
    virtual void OnError(std::wstring error_details) override;
-   virtual void OnSubtitle(std::wstring name, std::wstring download_count, std::wstring zip_link) override;
+   virtual void OnSubtitle(std::wstring name, std::wstring download_count, std::wstring zip_link,std::wstring) override;
 
    virtual void OnSearchFinish() override;
 

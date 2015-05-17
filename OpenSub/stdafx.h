@@ -29,6 +29,9 @@
 #include "LinkStaticControl.h"
 #include "IOpenSubtitlesAPI.h"
 #include "Tools.h"
+#include "zip\unzip.h"
+#include <iostream>
+#include <fstream>
 
 #ifndef _AFX_NO_OLE_SUPPORT
 #include <afxdtctl.h>           // MFC support for Internet Explorer 4 Common Controls
