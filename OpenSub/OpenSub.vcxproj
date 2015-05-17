@@ -60,7 +60,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CURL_STATICLIB;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -78,8 +78,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>..\OpenSubtitlesAPI\redistribute\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>OpenSubtitlesAPI.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\OpenSubtitlesAPI\redistribute\;$(SolutionDir)\curl\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenSubtitlesAPI.lib;libcurld.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>echo Copying to app folder...
@@ -99,13 +99,14 @@ copy /Y $(TargetPath) "$(ProgramFiles)\OSubAgent\OpenSub.exe"</Command>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CURL_STATICLIB;WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>..\OpenSubtitlesAPI\redistribute\;..\..\..\CodeLibrary\trunk\Tools\</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -118,6 +119,8 @@ copy /Y $(TargetPath) "$(ProgramFiles)\OSubAgent\OpenSub.exe"</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalDependencies>OpenSubtitlesAPI.lib;libcurld.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\OpenSubtitlesAPI\redistribute\;$(SolutionDir)\curl\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>$(SolutionDir)upx\upx.exe -qq "$(TargetPath)"

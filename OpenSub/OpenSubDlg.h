@@ -1,5 +1,8 @@
 #pragma once
-
+struct MemoryStruct {
+	char *memory;
+	size_t size;
+};
 class COpenSubDlg : public CDialog,public IEventListener
   {
 
@@ -16,7 +19,7 @@ protected:
    afx_msg void      OnPaint();
    afx_msg HCURSOR   OnQueryDragIcon();
    DECLARE_MESSAGE_MAP()
-
+   
 private:
    LRESULT           OnCopyData(WPARAM wParam, LPARAM lParam);
    //static UINT       ThreadDownload(LPVOID pvParam);
@@ -25,6 +28,8 @@ private:
    void              InitializeList();
    static BOOL       Launch(LPCWSTR cmd, HANDLE *hProc=NULL);
    void              EnableButtons(BOOL);
+   static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp);
+   MemoryStruct DownloadLink(std::wstring &link);
    bool              m_should_exit;
    IOpenSubtitlesAPI *m_api;
    

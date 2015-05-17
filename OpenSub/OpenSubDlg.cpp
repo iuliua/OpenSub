@@ -58,7 +58,7 @@ void COpenSubDlg::InitializeList()
 
    lvColumn.mask=LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
    lvColumn.fmt=LVCFMT_LEFT;
-   lvColumn.cx=660;
+   lvColumn.cx=655;
    lvColumn.pszText=L"Name";
    nCol=m_results_list_control.InsertColumn(1, &lvColumn);
   }
@@ -374,8 +374,80 @@ void COpenSubDlg::EnableButtons(BOOL flag)
 	m_results_list_control.EnableWindow(flag);
 	m_link.EnableWindow(flag);
 }
+
+size_t COpenSubDlg::WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+	size_t realsize = size * nmemb;
+	struct MemoryStruct *mem = (struct MemoryStruct *)userp;
+
+	mem->memory = (char*)realloc(mem->memory, mem->size + realsize + 1);
+	if (mem->memory == NULL) {
+		/* out of memory! */
+		printf("not enough memory (realloc returned NULL)\n");
+		return 0;
+	}
+
+	memcpy(&(mem->memory[mem->size]), contents, realsize);
+	mem->size += realsize;
+	mem->memory[mem->size] = 0;
+
+	return realsize;
+}
+
+MemoryStruct COpenSubDlg::DownloadLink(std::wstring &link)
+{
+	CURL *curl_handle;
+	CURLcode res;
+	static struct MemoryStruct chunk;
+
+	chunk.memory = (char*)malloc(1);  /* will be grown as needed by the realloc above */
+	chunk.size = 0;    /* no data at this point */
+
+	curl_global_init(CURL_GLOBAL_ALL);
+	/* init the curl session */
+	curl_handle = curl_easy_init();
+	/* specify URL to get */
+	curl_easy_setopt(curl_handle, CURLOPT_URL, Tools::WStringToString(link).c_str());
+	/* send all data to this function  */
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+
+	/* we pass our 'chunk' struct to the callback function */
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+
+	/* some servers don't like requests that are made without a user-agent
+	field, so we provide one */
+	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+	/* get it! */
+	res = curl_easy_perform(curl_handle);
+
+	/* check for errors */
+	if (res != CURLE_OK) {
+			MessageBox(Tools::StringToWString(curl_easy_strerror(res)).c_str());
+	}
+	else {
+		/*
+		* Now, our chunk.memory points to a memory block that is chunk.size
+		* bytes big and contains the remote file.
+		*
+		* Do something nice with it!
+		*/
+
+		//printf("%lu bytes retrieved\n", (long)chunk.size);
+	}
+
+	/* cleanup curl stuff */
+	curl_easy_cleanup(curl_handle);
+
+	//free(chunk.memory);
+
+	/* we're done with libcurl, so clean it up */
+	curl_global_cleanup();
+	return chunk;
+}
 void COpenSubDlg::OnDoubleClickSubtitle(NMHDR *pNMHDR, LRESULT *pResult)
 {
+	EnableButtons(FALSE);
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	*pResult = 0;
 	m_should_exit = true;
@@ -393,9 +465,9 @@ void COpenSubDlg::OnDoubleClickSubtitle(NMHDR *pNMHDR, LRESULT *pResult)
 	std::wstring zip_name = link.substr(link.rfind(L"/") + 1);
 
 	Tools::SetCurrDirToModuleLocation(m_api->GetFileDirectory(theApp.m_lpCmdLine).c_str());
-	URLDownloadToFile(NULL, link.c_str(), zip_name.c_str(), NULL, NULL);
+	MemoryStruct output=DownloadLink(link);
 
-	HZIP hz = OpenZip(zip_name.c_str(),0);
+	HZIP hz = OpenZip(output.memory,output.size,0);
 	ZIPENTRY ze; GetZipItem(hz, -1, &ze); int numitems = ze.index;
 	for (int i = 0; i < numitems; i++)
 	{
@@ -411,8 +483,9 @@ void COpenSubDlg::OnDoubleClickSubtitle(NMHDR *pNMHDR, LRESULT *pResult)
 		}
 	}
 	CloseZip(hz);
-	DeleteFile(zip_name.c_str());
+	free(output.memory);
 	OnBnClickedDownload();
+	EnableButtons(TRUE);
 }
 
 void COpenSubDlg::OnRadioHash()
