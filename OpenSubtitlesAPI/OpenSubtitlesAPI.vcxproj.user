@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerCommand>C:\Projects\ConsoleApplication1\Debug\ConsoleApplication1.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>c:\Program Files (x86)\OSubAgent\OpenSub.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommandArguments>c:\Users\iuliua\Downloads\Agora (2009) [1080p]\Agora.2009.1080p.BrRIp.x264.BOKUTOX.YIFY.mp4</LocalDebuggerCommandArguments>
   </PropertyGroup>
 </Project>

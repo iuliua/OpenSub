@@ -25,6 +25,7 @@ public:
 	virtual std::wstring GetFileHash(std::wstring file_path) override;
 	virtual std::wstring GetFileSize(std::wstring file_path) override;
 	virtual std::wstring GetFileNameNoExt(std::wstring file_path) override;
+	virtual std::wstring GetFileDirectory(std::wstring file_path) override;
 
 private:
 	bool Login();

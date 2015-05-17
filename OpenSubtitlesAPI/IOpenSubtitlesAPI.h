@@ -6,7 +6,7 @@ class IEventListener
 {
 public:
 	virtual void OnError(std::wstring error_details) = 0;
-	virtual void OnSubtitle(std::wstring name,std::wstring download_count,std::wstring zip_link) = 0;
+	virtual void OnSubtitle(std::wstring name,std::wstring download_count,std::wstring zip_link,std::wstring format) = 0;
 	virtual void OnSearchFinish() = 0;
 	virtual void OnApiReady(IOpenSubtitlesAPI* api) = 0;
 };
@@ -18,6 +18,7 @@ public:
 	virtual std::wstring GetFileHash(std::wstring file_path) = 0;
 	virtual std::wstring GetFileSize(std::wstring file_path) = 0;
 	virtual std::wstring GetFileNameNoExt(std::wstring file_path) = 0;
+	virtual std::wstring GetFileDirectory(std::wstring file_path) = 0;
 };
 
 class COpenSubtitlesAPIFactory

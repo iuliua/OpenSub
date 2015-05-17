@@ -177,14 +177,14 @@ bool CXMLBuilder::GetSubtitlesFound(SubtitleInfoList &sub_list,Buffer& response,
 				wcscpy_s(current_info.season, m_convertor.ToWCHAR(member_node.child(_OSVALUE).child(_OSSTRING).child_value()));
 			if (strcmp(member_node.child(_OSNAME).child_value(), "SeriesEpisode") == 0)
 				wcscpy_s(current_info.episode, m_convertor.ToWCHAR(member_node.child(_OSVALUE).child(_OSSTRING).child_value()));
-			if (strcmp(member_node.child(_OSNAME).child_value(), "SubDownloadLink") == 0)
+			if (strcmp(member_node.child(_OSNAME).child_value(), "ZipDownloadLink") == 0)
 				wcscpy_s(current_info.zip_link, m_convertor.ToWCHAR(member_node.child(_OSVALUE).child(_OSSTRING).child_value()));
 			if (strcmp(member_node.child(_OSNAME).child_value(), "SubLanguageID") == 0)
 				wcscpy_s(current_info.lang, m_convertor.ToWCHAR(member_node.child(_OSVALUE).child(_OSSTRING).child_value()));
 		}
 		sub_list.push_back(current_info);
 		if (wcscmp(current_info.matched_by, L"moviehash")==0)
-			event_listener->OnSubtitle(current_info.mov_release_name,current_info.sub_download_count,current_info.zip_link);
+			event_listener->OnSubtitle(current_info.mov_release_name,current_info.sub_download_count,current_info.zip_link,current_info.sub_format);
 	}
 	return true;
 }

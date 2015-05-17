@@ -33,6 +33,11 @@ std::wstring COpenSubtitlesAPI_Impl::GetFileNameNoExt(std::wstring file_path)
 	InputFileInfo info(file_path.c_str());
 	return info.file_name_no_extension;
 };
+std::wstring COpenSubtitlesAPI_Impl::GetFileDirectory(std::wstring file_path)
+{
+	InputFileInfo info(file_path.c_str());
+	return info.file_directory;
+}
 bool COpenSubtitlesAPI_Impl::Login()
 {
 	m_xml_builder.BuildLogin(m_xml_memory_writer);
