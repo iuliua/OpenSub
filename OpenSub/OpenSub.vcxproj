@@ -67,7 +67,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\OpenSubtitlesAPI\redistribute\;..\..\..\CodeLibrary\trunk\Tools\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\OpenSubtitlesAPI\redistribute\;$(SolutionDir)..\..\..\CodeLibrary\trunk\</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -106,7 +106,7 @@ copy /Y $(TargetPath) "$(ProgramFiles)\OSubAgent\OpenSub.exe"</Command>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\OpenSubtitlesAPI\redistribute\;..\..\..\CodeLibrary\trunk\Tools\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\OpenSubtitlesAPI\redistribute\;$(SolutionDir)..\..\..\CodeLibrary\trunk\</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -152,6 +152,7 @@ copy $(SolutionDir)OSubAgent.exe "$(HOMEDRIVE)$(HOMEPATH)\Google Drive"</Command
     <ClInclude Include="Tools.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\res\OpenSub.ico" />
     <Image Include="res\OpenSub.ico" />
   </ItemGroup>
   <ItemGroup>

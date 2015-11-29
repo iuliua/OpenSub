@@ -28,10 +28,10 @@ bool CXMLBuilder::BuildLogin(XMLMemoryWriter &xml_memory_writer)
 		pugi::xml_document xml_doc;
 		xml_doc.append_child(_OSMETHOD_CALL).append_child(_OSMETHOD_NAME).append_child(pugi::node_pcdata).set_value("LogIn");
 		pugi::xml_node params_node = xml_doc.child(_OSMETHOD_CALL).append_child(_OSPARAMS);
-		params_node.append_child(_OSPARAM).append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(m_convertor.ToUTF8(m_user.c_str()));
-		params_node.append_child(_OSPARAM).append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(m_convertor.ToUTF8(m_pass.c_str()));
-		params_node.append_child(_OSPARAM).append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(m_convertor.ToUTF8(L"eng"));
-		params_node.append_child(_OSPARAM).append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(m_convertor.ToUTF8(m_user_agent.c_str()));
+		params_node.append_child(_OSPARAM).append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(Tools::WStringToString(m_user).c_str());
+		params_node.append_child(_OSPARAM).append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(Tools::WStringToString(m_pass).c_str());
+		params_node.append_child(_OSPARAM).append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value("eng");
+		params_node.append_child(_OSPARAM).append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(Tools::WStringToString(m_user_agent).c_str());
 		xml_doc.save(xml_memory_writer, "\t", pugi::format_default, pugi::encoding_utf8);
 		return true;
 	}
@@ -71,26 +71,26 @@ bool CXMLBuilder::BuildSearch(XMLMemoryWriter& xml_memory_writer,InputFileInfo &
 
 	member_node = struct_node.append_child(_OSMEMBER);
 	member_node.append_child(_OSNAME).append_child(pugi::node_pcdata).set_value("sublanguageid");
-	member_node.append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(m_convertor.ToUTF8(lang.c_str()));
+	member_node.append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(Tools::WStringToString(lang).c_str());
 
 	member_node = struct_node.append_child(_OSMEMBER);
 	member_node.append_child(_OSNAME).append_child(pugi::node_pcdata).set_value("moviehash");
-	member_node.append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(m_convertor.ToUTF8(file_info.file_hash));
+	member_node.append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(Tools::WStringToString(file_info.file_hash).c_str());
 
 	member_node = struct_node.append_child(_OSMEMBER);
 	member_node.append_child(_OSNAME).append_child(pugi::node_pcdata).set_value("moviebytesize");
-	member_node.append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(m_convertor.ToUTF8(file_info.file_size));
+	member_node.append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(Tools::WStringToString(file_info.file_size).c_str());
 
 	struct_node = array_data.append_child(_OSVALUE).append_child(_OSSTRUCT);
 
 	member_node = struct_node.append_child(_OSMEMBER);
 	member_node.append_child(_OSNAME).append_child(pugi::node_pcdata).set_value("sublanguageid");
-	member_node.append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(m_convertor.ToUTF8(lang.c_str()));
+	member_node.append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(Tools::WStringToString(lang).c_str());
 
 	member_node = struct_node.append_child(_OSMEMBER);
 	member_node.append_child(_OSNAME).append_child(pugi::node_pcdata).set_value("query");
 
-	member_node.append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(m_convertor.ToUTF8(file_info.file_name_no_extension));
+	member_node.append_child(_OSVALUE).append_child(_OSSTRING).append_child(pugi::node_pcdata).set_value(Tools::WStringToString(file_info.file_name_no_extension).c_str());
 	//--- 
 	xml_doc.save(xml_memory_writer, "\t", pugi::format_default, pugi::encoding_utf8);
 
@@ -137,7 +137,7 @@ bool CXMLBuilder::GetToken(Buffer& response)
 	return m_token[0]!='\0';
 }
 
-bool CXMLBuilder::GetSubtitlesFound(SubtitleInfoList &sub_list,Buffer& response,IEventListener* event_listener)
+bool CXMLBuilder::GetSubtitlesFound(IOpenSubtitlesAPI::SubtitleInfoList &sub_list, Buffer& response, IEventListener* event_listener)
 {
 	pugi::xml_document xml_doc;
 	pugi::xml_parse_result result = xml_doc.load_buffer(response.buffer_in, response.buffer_in_total, pugi::parse_default);
@@ -157,34 +157,30 @@ bool CXMLBuilder::GetSubtitlesFound(SubtitleInfoList &sub_list,Buffer& response,
 	//--- go through all values
 	for (pugi::xml_node value_node = data_node.child(_OSVALUE); value_node; value_node = value_node.next_sibling(_OSVALUE))
 	{
-		subtitle_info current_info = { 0 };
+		IOpenSubtitlesAPI::subtitle_info current_info;
 		pugi::xml_node struct_node = value_node.child(_OSSTRUCT);
 		for (member_node = struct_node.child(_OSMEMBER); member_node; member_node = member_node.next_sibling(_OSMEMBER))
 		{
-			if (strcmp(member_node.child(_OSNAME).child_value(), "MatchedBy") == 0)
-				wcscpy_s(current_info.matched_by, m_convertor.ToWCHAR(member_node.child(_OSVALUE).child(_OSSTRING).child_value()));
-			if (strcmp(member_node.child(_OSNAME).child_value(), "SubFileName") == 0)
-				wcscpy_s(current_info.sub_file_name, m_convertor.ToWCHAR(member_node.child(_OSVALUE).child(_OSSTRING).child_value()));
-			if (strcmp(member_node.child(_OSNAME).child_value(), "SubFormat") == 0)
-				wcscpy_s(current_info.sub_format, m_convertor.ToWCHAR(member_node.child(_OSVALUE).child(_OSSTRING).child_value()));
-			if (strcmp(member_node.child(_OSNAME).child_value(), "SubDownloadsCnt") == 0)
-				wcscpy_s(current_info.sub_download_count, m_convertor.ToWCHAR(member_node.child(_OSVALUE).child(_OSSTRING).child_value()));
-			if (strcmp(member_node.child(_OSNAME).child_value(), "MovieReleaseName") == 0)
-				wcscpy_s(current_info.mov_release_name, m_convertor.ToWCHAR(member_node.child(_OSVALUE).child(_OSSTRING).child_value()));
-			if (strcmp(member_node.child(_OSNAME).child_value(), "MovieName") == 0)
-				wcscpy_s(current_info.mov_name, m_convertor.ToWCHAR(member_node.child(_OSVALUE).child(_OSSTRING).child_value()));
-			if (strcmp(member_node.child(_OSNAME).child_value(), "SeriesSeason") == 0)
-				wcscpy_s(current_info.season, m_convertor.ToWCHAR(member_node.child(_OSVALUE).child(_OSSTRING).child_value()));
-			if (strcmp(member_node.child(_OSNAME).child_value(), "SeriesEpisode") == 0)
-				wcscpy_s(current_info.episode, m_convertor.ToWCHAR(member_node.child(_OSVALUE).child(_OSSTRING).child_value()));
-			if (strcmp(member_node.child(_OSNAME).child_value(), "ZipDownloadLink") == 0)
-				wcscpy_s(current_info.zip_link, m_convertor.ToWCHAR(member_node.child(_OSVALUE).child(_OSSTRING).child_value()));
-			if (strcmp(member_node.child(_OSNAME).child_value(), "SubLanguageID") == 0)
-				wcscpy_s(current_info.lang, m_convertor.ToWCHAR(member_node.child(_OSVALUE).child(_OSSTRING).child_value()));
+			std::string name = member_node.child(_OSNAME).child_value();
+			std::wstring value = Tools::StringToWString(member_node.child(_OSVALUE).child(_OSSTRING).child_value());
+			if (name == "MatchedBy")
+				current_info.matched_by = value;
+			else
+				if (name == "SubFormat")
+					current_info.format = value;
+				else
+					if (name == "SubDownloadsCnt")
+						current_info.download_count = value;
+					else
+						if (name == "MovieReleaseName")
+							current_info.release_name = value;
+						else
+							if (name == "ZipDownloadLink")
+								current_info.zip_link = value;
 		}
 		sub_list.push_back(current_info);
-		if (wcscmp(current_info.matched_by, L"moviehash")==0)
-			event_listener->OnSubtitle(current_info.mov_release_name,current_info.sub_download_count,current_info.zip_link,current_info.sub_format);
+		if (current_info.matched_by==L"moviehash")
+			event_listener->OnSubtitle(current_info);
 	}
 	return true;
 }

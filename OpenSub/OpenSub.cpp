@@ -48,8 +48,7 @@ BOOL COpenSubApp::InitInstance()
 
    COpenSubDlg dlg;
    m_pMainWnd = &dlg;
-   IOpenSubtitlesAPI* osub_api=NULL;
-   factory.Create(L"", L"", L"JulianOS", &dlg,&osub_api);
+   IOpenSubtitlesAPI* osub_api=factory.Create(L"", L"", L"JulianOS", &dlg);
    osub_api->Search(m_lpCmdLine);
    INT_PTR nResponse=dlg.DoModal();
    if (nResponse==IDOK)

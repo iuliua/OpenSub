@@ -67,25 +67,26 @@ void COpenSubtitlesAPI_Impl::ProcessMessage(MSG& msg)
 {
 	switch (msg.message)
 	{
-	case MSG_SEARCH:
-	{
-		if (m_connection.Connect())
+		case MSG_SEARCH:
 		{
-			if (Login())
+			if (m_connection.Connect())
 			{
-				wchar_t* file_path = (wchar_t*)msg.lParam;
-				Search(file_path);
-				m_event_listener->OnSearchFinish();
-				delete[] file_path;
+				if (Login())
+				{
+					wchar_t* file_path = (wchar_t*)msg.lParam;
+					Search(file_path);
+					m_event_listener->OnSearchComplete();
+					delete[] file_path;
+					Logout();
+				}
+				else
+					m_event_listener->OnError(m_error_text.c_str());
+				
+				m_connection.Disconnect();
 			}
 			else
-				m_event_listener->OnError(L"failed to login");
+				m_event_listener->OnError(L"failed to connect");
+			break;
 		}
-		else
-			m_event_listener->OnError(L"failed to connect");
-		Logout();
-		m_connection.Disconnect();
-	}
-		break;
 	}
 }

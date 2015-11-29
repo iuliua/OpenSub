@@ -19,9 +19,8 @@
 #include "pugixml/pugixml.hpp"
 #include <WinInet.h>
 
-#include "SubtitleInfo.h"
+#include "Tools\StringConversion.h"
 #include "Buffer.h"
-#include "StringConvertor.h"
 #include "XMLMemoryWriter.h"
 #include "InputFileInfo.h"
 #include "IOpenSubtitlesAPI.h"

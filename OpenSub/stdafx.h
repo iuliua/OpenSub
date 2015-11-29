@@ -24,12 +24,15 @@
 
 #include <vector>
 #include <new.h>
+#include <algorithm>
+#include <functional>
 #include <wininet.h>
 #include "OpenSub.h"
 #include "LinkStaticControl.h"
 #include "IOpenSubtitlesAPI.h"
-#include "Tools.h"
-#include "zip\unzip.h"
+#include "Tools\zip\unzip.h"
+#include "Tools\CommonTools.h"
+#include "Tools\StringConversion.h"
 #include <iostream>
 #include <fstream>
 #include "curl/curl.h"

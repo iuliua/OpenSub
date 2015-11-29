@@ -8,8 +8,7 @@
 //|                                                                  |
 //+------------------------------------------------------------------+
 COpenSubDlg::COpenSubDlg(CWnd *pParent)
-   : CDialog(COpenSubDlg::IDD, pParent),
-	 m_should_exit(true)
+   : CDialog(COpenSubDlg::IDD, pParent)
 {
    m_hIcon=AfxGetApp()->LoadIcon(IDR_MAINFRAME);
   }
@@ -24,7 +23,6 @@ void COpenSubDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BUTTON2, m_btn_explore);
 	DDX_Control(pDX, IDC_BUTTON3, m_btn_play);
 	DDX_Control(pDX, IDC_LINK_MAIN, m_link);
-	DDX_Control(pDX, IDC_BUTTON4, m_button_lang);
 	DDX_Control(pDX, IDC_RADIO_TEXT, m_text_match);
 	DDX_Control(pDX, IDC_RADIO_HASH, m_hash_match);
 }
@@ -94,7 +92,6 @@ BOOL COpenSubDlg::OnInitDialog()
    SetWindowText(path.substr(path.rfind(L'\\') + 1).c_str());
 //--- create list columns
    InitializeList();
-   m_button_lang.SetWindowText(L"eng");
    m_hash_match.SetCheck(1);
    EnableButtons(FALSE);
    return(TRUE);
@@ -115,125 +112,6 @@ LRESULT COpenSubDlg::OnCopyData(WPARAM wParam, LPARAM lParam)
     return(0);
 }
 
-BOOL COpenSubDlg::DownloadAndUnzip(LPCWSTR zip_link)
-{
-  PrintMessage(GetSafeHwnd(), L"downloading...");
-  return TRUE;
-}
-/*
-UINT COpenSubDlg::ThreadDownload(LPVOID pvParam)
-  {
-
-   WCHAR                new_location[512];
-   COpenSubDlg         *dlg       = (COpenSubDlg*)pvParam;
-   InputFileInfo       &file_info = dlg->file_info;
-   OSApi::subtitle_info sub_info = { 0 };
-
-   // get selected item
-   if(dlg->GetSubInfo(sub_info))
-   {
-	   dlg->m_btn_download.EnableWindow(FALSE);
-	   // download and unzip subtitle to c:\sub file
-	   if(dlg->DownloadAndUnzip(sub_info))
-	   {
-		   // rename subtitle and move to movie folder 
-		   swprintf_s(new_location, sizeof(new_location) / sizeof(WCHAR), L"%s\\%s.%s", file_info.file_directory
-			   , file_info.file_name_no_extension
-			   , sub_info.sub_format);
-
-		   if (GetFileAttributes(new_location) != INVALID_FILE_ATTRIBUTES && !::DeleteFile(new_location))
-			   PrintMessage(dlg->GetSafeHwnd(), L"Cannot delete existing subtitle.");
-		   else
-		   {
-			   PrintMessage(dlg->GetSafeHwnd(), L"Moving subtitle...");
-			   if (!::MoveFile(dlg->m_sub_tmp_file_path, new_location))
-				   PrintMessage(dlg->GetSafeHwnd(), L"Cannot move file.");
-			   else
-				   PrintMessage(dlg->GetSafeHwnd(), L"Done.");
-		   }
-	   }
-	   // cleanup
-	   ::DeleteFile(dlg->m_zip_tmp_file_path);
-	   ::DeleteFile(dlg->m_sub_tmp_file_path);
-	   dlg->m_btn_download.EnableWindow(TRUE);
-   }
-   if (dlg->m_should_exit)
-	   dlg->EndDialog(IDOK);
-   return(FALSE);
-  }
-// Test subtitle sequence
-// 1. Retrieve selected subtitle information
-// 2. Disable Test button
-// 3. Download and unzip subtitle file
-// 4. 
-UINT COpenSubDlg::ThreadTestSub(LPVOID pvParam)
-{
-	HANDLE               hProc(NULL);
-    COpenSubDlg         *dlg=(COpenSubDlg*)pvParam;
-    InputFileInfo        &file_info=dlg->file_info;
-	OSApi::subtitle_info sub_info = { 0 };
-	WCHAR                existing_subtitle[512];
-	WCHAR                temp_subtitle[512];
-	bool                 subtitle_exists = false;
-    
-	// get selected item
-	if (dlg->GetSubInfo(sub_info))
-	{
-		dlg->m_btn_play.EnableWindow(FALSE);
-		//--- download and unzip subtitle to c:\sub file
-		if (dlg->DownloadAndUnzip(sub_info))
-		{
-			swprintf_s(existing_subtitle, sizeof(existing_subtitle) / sizeof(WCHAR), L"%s\\%s.%s",
-				file_info.file_directory
-				, file_info.file_name_no_extension
-				, sub_info.sub_format);
-			swprintf_s(temp_subtitle, sizeof(temp_subtitle) / sizeof(WCHAR), L"%s\\temp_moved_open_sub.tmp",
-				file_info.file_directory);
-			::DeleteFile(temp_subtitle);
-			
-			subtitle_exists = (GetFileAttributes(existing_subtitle) != INVALID_FILE_ATTRIBUTES);
-
-			//does an existing subtitle already available? then temporarily move it	
-			if ((subtitle_exists && ::MoveFile(existing_subtitle, temp_subtitle)) || !subtitle_exists)
-			{
-				if (::MoveFile(dlg->m_sub_tmp_file_path, existing_subtitle))
-				{
-					if (Launch(file_info.file_full_name, &hProc))
-					{
-						dlg->PrintMessage(dlg->GetSafeHwnd(), L"Playing...");
-						::WaitForSingleObject(hProc, INFINITE);
-						dlg->PrintMessage(dlg->GetSafeHwnd(), L"");
-						CloseHandle(hProc);
-						if (subtitle_exists)
-						{
-							if (!::DeleteFile(existing_subtitle) || !::MoveFile(temp_subtitle, existing_subtitle))
-								PrintMessage(dlg->GetSafeHwnd(), L"Cannot rename temporary file.");
-						}
-						else
-						{
-							if (!::DeleteFile(existing_subtitle))
-								PrintMessage(dlg->GetSafeHwnd(), L"Cannot delete test subtitle.");
-						}
-					}
-					else
-						PrintMessage(dlg->GetSafeHwnd(), L"failed to open video");
-				}
-				else
-				{
-					PrintMessage(dlg->GetSafeHwnd(), L"Cannot move subtitle file.");
-					if (!::MoveFile(temp_subtitle, existing_subtitle))
-						PrintMessage(dlg->GetSafeHwnd(), L"Cannot rename temporary file.");
-				}
-			}
-			else
-				PrintMessage(dlg->GetSafeHwnd(), L"Cannot create temporary file.");
-		}
-		dlg->m_btn_play.EnableWindow(TRUE);
-		::DeleteFile(dlg->m_zip_tmp_file_path);
-		::DeleteFile(dlg->m_sub_tmp_file_path);
-	}
-    return(FALSE);
-}*/
 void COpenSubDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
    if ((nID & 0xFFF0) == IDM_ABOUTBOX)
@@ -270,42 +148,20 @@ void COpenSubDlg::OnPaint()
       CDialog::OnPaint();
      }
   }
-// The system calls this function to obtain the cursor to display while the user drags
-//  the minimized window.
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 HCURSOR COpenSubDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-int CALLBACK SortFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
-{
-	CListCtrl* pListCtrl = (CListCtrl*)lParamSort;
-	CString    strItem1 = pListCtrl->GetItemText(static_cast<int>(lParam1), 0);
-	CString    strItem2 = pListCtrl->GetItemText(static_cast<int>(lParam2), 0);
-
-	int x1 = _tstoi(strItem1.GetBuffer());
-	int x2 = _tstoi(strItem2.GetBuffer());
-	int result = 0;
-	if ((x1 - x2) < 0)
-		result = -1;
-	else if ((x1 - x2) == 0)
-		result = 0;
-	else
-		result = 1;
-
-	return result*-1;
-}
 void COpenSubDlg::OnBnClickedDownload()
   {
+	OnDoubleClickSubtitle(NULL, NULL);
   }
 
 void COpenSubDlg::OnBnClickedExplore()
   {
    WCHAR command[512];
-   swprintf_s(command, sizeof(command) / sizeof(WCHAR), L"explorer /select,%s", theApp.m_lpCmdLine);
+   swprintf_s(command, sizeof(command) / sizeof(WCHAR), L"explorer /select,\"%s\"", theApp.m_lpCmdLine);
    STARTUPINFO info = { 0 };
    info.cb = sizeof(info);
    info.dwFlags = STARTF_USESHOWWINDOW;
@@ -318,27 +174,14 @@ void COpenSubDlg::OnBnClickedExplore()
 	   CloseHandle(processInfo.hThread);
    }
   }
-void COpenSubDlg::OnBnClickedPlay()
-{
-   //AfxBeginThread(ThreadTestSub,this);
-}
-void COpenSubDlg::GetMatchingMethod(CString &str)
-{
-	if (m_hash_match.GetCheck())
-		str.Format(L"hash");
-	if (m_text_match.GetCheck())
-		str.Format(L"text");
-}
+
 void COpenSubDlg::OnLinkClicked()
 {
-	CString str_lang, str_match;
 	CString str;
-	m_button_lang.GetWindowText(str_lang);
-	GetMatchingMethod(str_match);
-	if (wcscmp(str_match, L"text") == 0)
-		str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviename-%s", (LPCWSTR)str_lang, m_api->GetFileNameNoExt(theApp.m_lpCmdLine).c_str());
-	if (wcscmp(str_match, L"hash") == 0)
-		str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviebytesize-%s/moviehash-%s", (LPCWSTR)str_lang, m_api->GetFileSize(theApp.m_lpCmdLine).c_str(),m_api->GetFileHash(theApp.m_lpCmdLine).c_str());
+	if (m_text_match.GetCheck())
+		str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviename-%s", L"eng", m_api->GetFileNameNoExt(theApp.m_lpCmdLine).c_str());
+	if (m_hash_match.GetCheck())
+		str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviebytesize-%s/moviehash-%s", L"eng", m_api->GetFileSize(theApp.m_lpCmdLine).c_str(),m_api->GetFileHash(theApp.m_lpCmdLine).c_str());
 	Launch(str);
 }
 BOOL COpenSubDlg::Launch(LPCWSTR cmd,HANDLE *hProc)
@@ -361,14 +204,13 @@ BOOL COpenSubDlg::Launch(LPCWSTR cmd,HANDLE *hProc)
 		return TRUE;
 	}
 	else
-	return FALSE;
+		return FALSE;
 }
 void COpenSubDlg::EnableButtons(BOOL flag)
 {
 	m_btn_download.EnableWindow(flag);
 	m_btn_explore.EnableWindow(flag);
 	m_btn_play.EnableWindow(flag);
-	m_button_lang.EnableWindow(flag);
 	m_hash_match.EnableWindow(flag);
 	m_text_match.EnableWindow(flag);
 	m_results_list_control.EnableWindow(flag);
@@ -393,7 +235,19 @@ size_t COpenSubDlg::WriteMemoryCallback(void *contents, size_t size, size_t nmem
 
 	return realsize;
 }
-
+BOOL COpenSubDlg::GetSelectedSubtitle(IOpenSubtitlesAPI::subtitle_info& info)
+{
+	//--- get info on selected item
+	int selected_item = m_results_list_control.GetNextItem(-1, LVNI_SELECTED);
+	if (selected_item < 0)
+		return FALSE;
+	LVITEM item = { 0 };
+	item.mask = LVIF_PARAM;
+	item.iItem = selected_item;
+	m_results_list_control.GetItem(&item);
+	info= m_subtitles[item.lParam];
+	return TRUE;
+}
 MemoryStruct COpenSubDlg::DownloadLink(std::wstring &link)
 {
 	CURL *curl_handle;
@@ -447,47 +301,105 @@ MemoryStruct COpenSubDlg::DownloadLink(std::wstring &link)
 }
 void COpenSubDlg::OnDoubleClickSubtitle(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	EnableButtons(FALSE);
-	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-	*pResult = 0;
-	m_should_exit = true;
-
-	//--- get info on selected item
-	int selected_item = m_results_list_control.GetNextItem(-1, LVNI_SELECTED);
-	LVITEM item = { 0 };
-	item.mask = LVIF_PARAM;
-	item.iItem = selected_item;
-	m_results_list_control.GetItem(&item);
-
-	std::wstring &format_and_link = *((std::wstring*)(item.lParam));
-	std::wstring format=format_and_link.substr(0,format_and_link.find_first_of(L','));
-	std::wstring link = format_and_link.substr(format_and_link.find_first_of(L',')+1);
-	std::wstring zip_name = link.substr(link.rfind(L"/") + 1);
-
-	Tools::SetCurrDirToModuleLocation(m_api->GetFileDirectory(theApp.m_lpCmdLine).c_str());
-	MemoryStruct output=DownloadLink(link);
-
-	HZIP hz = OpenZip(output.memory,output.size,0);
-	ZIPENTRY ze; GetZipItem(hz, -1, &ze); int numitems = ze.index;
-	for (int i = 0; i < numitems; i++)
+	if (pResult)
+		*pResult = 0;
+	IOpenSubtitlesAPI::subtitle_info selected_sub;
+	if (GetSelectedSubtitle(selected_sub))
 	{
-		GetZipItem(hz, i, &ze);
-		std::wstring tmp = std::wstring(ze.name).substr(std::wstring(ze.name).rfind(L'.') + 1);
-		if (std::wstring(ze.name).substr(std::wstring(ze.name).rfind(L'.') + 1).compare(format) == 0)
-		{
-			char* buffer = new char[ze.unc_size];
-			UnzipItem(hz, i, buffer,ze.unc_size);
-			std::ofstream out((m_api->GetFileNameNoExt(theApp.m_lpCmdLine) + L'.' + format).c_str(),std::ios::binary);
-			out.write(buffer, ze.unc_size);
-			out.close();
-		}
-	}
-	CloseZip(hz);
-	free(output.memory);
-	OnBnClickedDownload();
-	EnableButtons(TRUE);
-}
+		EnableButtons(FALSE);
+		PrintMessage(GetSafeHwnd(), L"Downloading");
+		Tools::SetCurrDirToFileLocation(theApp.m_lpCmdLine);
+		MemoryStruct output = DownloadLink(selected_sub.zip_link);
 
+		HZIP hz = OpenZip(output.memory, output.size, 0);
+		ZIPENTRY ze; GetZipItem(hz, -1, &ze); int numitems = ze.index;
+		for (int i = 0; i < numitems; i++)
+		{
+			GetZipItem(hz, i, &ze);
+			std::wstring tmp = std::wstring(ze.name).substr(std::wstring(ze.name).rfind(L'.') + 1);
+			if (std::wstring(ze.name).substr(std::wstring(ze.name).rfind(L'.') + 1).compare(selected_sub.format) == 0)
+			{
+				char* buffer = new char[ze.unc_size];
+				UnzipItem(hz, i, buffer, ze.unc_size);
+				std::ofstream out((m_api->GetFileNameNoExt(theApp.m_lpCmdLine) + L'.' + selected_sub.format).c_str(), std::ios::binary);
+				out.write(buffer, ze.unc_size);
+				out.close();
+			}
+		}
+		CloseZip(hz);
+		free(output.memory);
+		PrintMessage(GetSafeHwnd(), L"Done");
+		EnableButtons(TRUE);
+		EndDialog(IDOK);
+	}
+}
+void COpenSubDlg::OnBnClickedPlay()
+{
+	IOpenSubtitlesAPI::subtitle_info selected_sub;
+	
+	if (GetSelectedSubtitle(selected_sub))
+	{
+		WCHAR                existing_subtitle[512];
+		WCHAR                temp_subtitle[512];
+		bool                 subtitle_exists = false;
+		swprintf_s(existing_subtitle, sizeof(existing_subtitle) / sizeof(WCHAR), L"%s\\%s.%s",
+			m_api->GetFileDirectory(theApp.m_lpCmdLine).c_str(),
+			m_api->GetFileNameNoExt(theApp.m_lpCmdLine).c_str(),
+			selected_sub.format.c_str());
+		swprintf_s(temp_subtitle, sizeof(temp_subtitle) / sizeof(WCHAR), L"%s\\temp_moved_open_sub.tmp",
+			m_api->GetFileDirectory(theApp.m_lpCmdLine).c_str());
+		::DeleteFile(temp_subtitle);
+
+		subtitle_exists = (GetFileAttributes(existing_subtitle) != INVALID_FILE_ATTRIBUTES);
+		if ((subtitle_exists && ::MoveFile(existing_subtitle, temp_subtitle)) || !subtitle_exists)
+		{
+			EnableButtons(FALSE);
+			PrintMessage(GetSafeHwnd(), L"Downloading");
+			Tools::SetCurrDirToFileLocation(theApp.m_lpCmdLine);
+			MemoryStruct output = DownloadLink(selected_sub.zip_link);
+
+			HZIP hz = OpenZip(output.memory, output.size, 0);
+			ZIPENTRY ze; GetZipItem(hz, -1, &ze); int numitems = ze.index;
+			for (int i = 0; i < numitems; i++)
+			{
+				GetZipItem(hz, i, &ze);
+				std::wstring tmp = std::wstring(ze.name).substr(std::wstring(ze.name).rfind(L'.') + 1);
+				if (std::wstring(ze.name).substr(std::wstring(ze.name).rfind(L'.') + 1).compare(selected_sub.format) == 0)
+				{
+					char* buffer = new char[ze.unc_size];
+					UnzipItem(hz, i, buffer, ze.unc_size);
+					std::ofstream out((m_api->GetFileNameNoExt(theApp.m_lpCmdLine) + L'.' + selected_sub.format).c_str(), std::ios::binary);
+					out.write(buffer, ze.unc_size);
+					out.close();
+				}
+			}
+			CloseZip(hz);
+			free(output.memory);
+			HANDLE hProc;
+			if (Launch(theApp.m_lpCmdLine, &hProc))
+			{
+				PrintMessage(GetSafeHwnd(), L"Playing...");
+				::WaitForSingleObject(hProc, INFINITE);
+				CloseHandle(hProc);
+				if (subtitle_exists)
+				{
+					if (!::DeleteFile(existing_subtitle) || !::MoveFile(temp_subtitle, existing_subtitle))
+						PrintMessage(GetSafeHwnd(), L"Cannot rename temporary file.");
+				}
+				else
+				{
+					if (!::DeleteFile(existing_subtitle))
+						PrintMessage(GetSafeHwnd(), L"Cannot delete test subtitle.");
+				}
+			}
+			else
+				PrintMessage(GetSafeHwnd(), L"failed to open video");
+			PrintMessage(GetSafeHwnd(), L"Done");
+			EnableButtons(TRUE);
+		}
+		return;
+	}
+}
 void COpenSubDlg::OnRadioHash()
 {
 }
@@ -497,23 +409,29 @@ void COpenSubDlg::OnError(std::wstring error_details)
 	MessageBox(error_details.c_str(), L"error", MB_OK);
 }
 
-void COpenSubDlg::OnSubtitle(std::wstring name, std::wstring download_count, std::wstring zip_link,std::wstring format)
+void COpenSubDlg::OnSubtitle(IOpenSubtitlesAPI::subtitle_info& info)
 {
-	LVITEM lvItem = { 0 };
-
-	lvItem.mask = LVIF_TEXT | LVIF_PARAM;
-	lvItem.iItem = 0;
-	lvItem.iSubItem = 0;
-	lvItem.pszText = const_cast<LPWSTR>(download_count.c_str());
-	lvItem.lParam = (LPARAM)(new(std::nothrow) std::wstring(format+L","+zip_link));
-
-	m_results_list_control.InsertItem(&lvItem);
-	m_results_list_control.SetItemText(0, 1, name.c_str());
-	m_results_list_control.SortItemsEx(&SortFunc, (LPARAM)&m_results_list_control);
+	m_subtitles.push_back(info);
+	
 }
 
-void COpenSubDlg::OnSearchFinish()
+void COpenSubDlg::OnSearchComplete()
 {
+	std::sort(m_subtitles.begin(), m_subtitles.end());
+	
+	for (unsigned int i = 0; i < m_subtitles.size();i++)
+	{
+		LVITEM lvItem = { 0 };
+		lvItem.mask = LVIF_TEXT | LVIF_PARAM;
+		lvItem.iItem = 0;
+		lvItem.iSubItem = 0;
+		lvItem.pszText = const_cast<LPWSTR>(m_subtitles[i].download_count.c_str());
+		lvItem.lParam = i;
+
+		m_results_list_control.InsertItem(&lvItem);
+		m_results_list_control.SetItemText(0, 1,m_subtitles[i].release_name.c_str());
+	}
+
 	EnableButtons(TRUE);
 }
 

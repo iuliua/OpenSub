@@ -15,6 +15,7 @@ private:
 	Buffer          m_response;
 	CHAR            m_token[64];
 	SubtitleInfoList m_sub_list;
+	std::wstring     m_error_text;
 
 public:
 	COpenSubtitlesAPI_Impl(const std::wstring &user, const std::wstring &pass, const std::wstring &user_agent,IEventListener*);
@@ -31,7 +32,5 @@ private:
 	bool Login();
 	bool Logout();
 	bool Search(LPCWSTR);
-
 	virtual void ProcessMessage(MSG&) override;
-
 };

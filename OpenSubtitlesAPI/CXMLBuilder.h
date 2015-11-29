@@ -3,7 +3,6 @@
 class CXMLBuilder 
 {
 private:
-	CConvertor  m_convertor;
 	std::wstring m_user;
 	std::wstring m_pass;
 	std::wstring m_user_agent;
@@ -15,5 +14,5 @@ public:
 	bool BuildSearch(XMLMemoryWriter&, InputFileInfo &,const std::wstring);
 	bool IsResponseOK(Buffer&);
 	bool GetToken(Buffer&);
-	bool GetSubtitlesFound(SubtitleInfoList &,Buffer&,IEventListener*);
+	bool GetSubtitlesFound(IOpenSubtitlesAPI::SubtitleInfoList &,Buffer&,IEventListener*);
 };

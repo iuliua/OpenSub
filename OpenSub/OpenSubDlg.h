@@ -5,7 +5,6 @@ struct MemoryStruct {
 };
 class COpenSubDlg : public CDialog,public IEventListener
   {
-
 public:
    COpenSubDlg(CWnd *pParent=NULL);
    enum { IDD=IDD_OPENSUB_DIALOG };
@@ -22,20 +21,15 @@ protected:
    
 private:
    LRESULT           OnCopyData(WPARAM wParam, LPARAM lParam);
-   //static UINT       ThreadDownload(LPVOID pvParam);
-   //static UINT       ThreadTestSub(LPVOID pvParam);
    static void       PrintMessage(HWND handle, LPCWSTR msg);
    void              InitializeList();
    static BOOL       Launch(LPCWSTR cmd, HANDLE *hProc=NULL);
    void              EnableButtons(BOOL);
    static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp);
    MemoryStruct DownloadLink(std::wstring &link);
-   bool              m_should_exit;
    IOpenSubtitlesAPI *m_api;
+   std::vector<IOpenSubtitlesAPI::subtitle_info> m_subtitles;
    
-private:
-   BOOL              DownloadAndUnzip(LPCWSTR);
-   void              GetMatchingMethod(CString &);
 public:
    afx_msg void      OnSysCommand(UINT nID,LPARAM lParam);
 private:
@@ -50,20 +44,17 @@ public:
    CLink             m_link;
    afx_msg void      OnBnClickedExplore();
    afx_msg void      OnBnClickedPlay();
-   CButton m_button_lang;
    afx_msg void OnDoubleClickSubtitle(NMHDR *pNMHDR, LRESULT *pResult);
    CButton m_text_match;
    CButton m_hash_match;
    afx_msg void OnRadioHash();
 
+   // IEventListener
    virtual void OnError(std::wstring error_details) override;
-   virtual void OnSubtitle(std::wstring name, std::wstring download_count, std::wstring zip_link,std::wstring) override;
-
-   virtual void OnSearchFinish() override;
-
+   virtual void OnSubtitle(IOpenSubtitlesAPI::subtitle_info&) override;
+   virtual void OnSearchComplete() override;
    virtual void OnApiReady(IOpenSubtitlesAPI* api) override;
-
+   // 
+   BOOL GetSelectedSubtitle(IOpenSubtitlesAPI::subtitle_info&);
 };
-
-
 //+------------------------------------------------------------------+
