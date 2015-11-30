@@ -324,7 +324,6 @@ void COpenSubDlg::OnError(std::wstring error_details)
 void COpenSubDlg::OnSubtitle(IOpenSubtitlesAPI::subtitle_info& info)
 {
 	m_subtitles.push_back(info);
-	
 }
 
 void COpenSubDlg::OnSearchComplete()

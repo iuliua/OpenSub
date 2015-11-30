@@ -125,10 +125,11 @@ copy /Y $(TargetPath) "$(ProgramFiles)\OSubAgent\OpenSub.exe"</Command>
     <PostBuildEvent>
       <Command>echo Copying to app folder...
 copy /Y $(TargetPath) "$(ProgramFiles)\OSubAgent\OpenSub.exe"
-$(SolutionDir)upx\upx.exe -qq "$(TargetPath)"
-"C:\Program Files (x86)\NSIS\makensis.exe" /V1 "$(SolutionDir)\installer.nsi"
+copy /Y $(TargetPath) $(SolutionDir)\deployment\OpenSub.exe
+$(SolutionDir)\deployment\upx\upx.exe -qq "$(SolutionDir)\deployment\OpenSub.exe"
+"C:\Program Files (x86)\NSIS\makensis.exe" /V1 "$(SolutionDir)\deployment\installer.nsi"
 echo Copying installer to Google Drive...
-copy $(SolutionDir)OSubAgent.exe "$(HOMEDRIVE)$(HOMEPATH)\Google Drive"</Command>
+copy $(SolutionDir)\deployment\OSubAgent.exe "$(HOMEDRIVE)$(HOMEPATH)\Google Drive"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
