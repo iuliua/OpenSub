@@ -67,7 +67,7 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\OpenSubtitlesAPI\redistribute\;$(SolutionDir)..\..\..\CodeLibrary\trunk\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\OpenSubtitlesAPI\redistribute\;$(CodeLibrary)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -78,7 +78,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>..\OpenSubtitlesAPI\redistribute\;$(SolutionDir)\curl\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\OpenSubtitlesAPI\redistribute\;$(CodeLibrary)\Tools\curl</AdditionalLibraryDirectories>
       <AdditionalDependencies>OpenSubtitlesAPI.lib;libcurld.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -106,7 +106,7 @@ copy /Y $(TargetPath) "$(ProgramFiles)\OSubAgent\OpenSub.exe"</Command>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)..\OpenSubtitlesAPI\redistribute\;$(SolutionDir)..\..\..\CodeLibrary\trunk\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\OpenSubtitlesAPI\redistribute\;$(CodeLibrary)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -120,7 +120,7 @@ copy /Y $(TargetPath) "$(ProgramFiles)\OSubAgent\OpenSub.exe"</Command>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalDependencies>OpenSubtitlesAPI.lib;libcurl.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\OpenSubtitlesAPI\redistribute\;$(SolutionDir)\curl\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\OpenSubtitlesAPI\redistribute\;$(CodeLibrary)\Tools\curl</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>echo Copying to app folder...
