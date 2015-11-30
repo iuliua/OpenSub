@@ -241,8 +241,8 @@ void COpenSubDlg::OnDoubleClickSubtitle(NMHDR *pNMHDR, LRESULT *pResult)
 		EnableButtons(FALSE);
 		PrintMessage(GetSafeHwnd(), L"Downloading");
 		Tools::SetCurrDirToFileLocation(theApp.m_lpCmdLine);
-        Tools::MemoryStruct memory = { 0 };
-        Tools::MemoryStruct extracted_sub = { 0 };
+        Tools::MemoryStruct memory;
+        Tools::MemoryStruct extracted_sub;
         Tools::DownloadLink(selected_sub.zip_link, memory);
         Tools::UnzipFileType(memory.memory, memory.size, selected_sub.format, extracted_sub);
         std::ofstream out((m_api->GetFileNameNoExt(theApp.m_lpCmdLine) + L'.' + selected_sub.format).c_str(), std::ios::binary);
