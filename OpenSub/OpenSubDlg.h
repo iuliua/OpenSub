@@ -1,8 +1,5 @@
 #pragma once
-struct MemoryStruct {
-	char *memory;
-	size_t size;
-};
+
 class COpenSubDlg : public CDialog,public IEventListener
   {
 public:
@@ -25,8 +22,6 @@ private:
    void              InitializeList();
    static BOOL       Launch(LPCWSTR cmd, HANDLE *hProc=NULL);
    void              EnableButtons(BOOL);
-   static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp);
-   MemoryStruct DownloadLink(std::wstring &link);
    IOpenSubtitlesAPI *m_api;
    std::vector<IOpenSubtitlesAPI::subtitle_info> m_subtitles;
    

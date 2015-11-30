@@ -217,24 +217,6 @@ void COpenSubDlg::EnableButtons(BOOL flag)
 	m_link.EnableWindow(flag);
 }
 
-size_t COpenSubDlg::WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
-{
-	size_t realsize = size * nmemb;
-	struct MemoryStruct *mem = (struct MemoryStruct *)userp;
-
-	mem->memory = (char*)realloc(mem->memory, mem->size + realsize + 1);
-	if (mem->memory == NULL) {
-		/* out of memory! */
-		printf("not enough memory (realloc returned NULL)\n");
-		return 0;
-	}
-
-	memcpy(&(mem->memory[mem->size]), contents, realsize);
-	mem->size += realsize;
-	mem->memory[mem->size] = 0;
-
-	return realsize;
-}
 BOOL COpenSubDlg::GetSelectedSubtitle(IOpenSubtitlesAPI::subtitle_info& info)
 {
 	//--- get info on selected item
@@ -248,57 +230,7 @@ BOOL COpenSubDlg::GetSelectedSubtitle(IOpenSubtitlesAPI::subtitle_info& info)
 	info= m_subtitles[item.lParam];
 	return TRUE;
 }
-MemoryStruct COpenSubDlg::DownloadLink(std::wstring &link)
-{
-	CURL *curl_handle;
-	CURLcode res;
-	static struct MemoryStruct chunk;
 
-	chunk.memory = (char*)malloc(1);  /* will be grown as needed by the realloc above */
-	chunk.size = 0;    /* no data at this point */
-
-	curl_global_init(CURL_GLOBAL_ALL);
-	/* init the curl session */
-	curl_handle = curl_easy_init();
-	/* specify URL to get */
-	curl_easy_setopt(curl_handle, CURLOPT_URL, Tools::WStringToString(link).c_str());
-	/* send all data to this function  */
-	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-
-	/* we pass our 'chunk' struct to the callback function */
-	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
-
-	/* some servers don't like requests that are made without a user-agent
-	field, so we provide one */
-	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-
-	/* get it! */
-	res = curl_easy_perform(curl_handle);
-
-	/* check for errors */
-	if (res != CURLE_OK) {
-			MessageBox(Tools::StringToWString(curl_easy_strerror(res)).c_str());
-	}
-	else {
-		/*
-		* Now, our chunk.memory points to a memory block that is chunk.size
-		* bytes big and contains the remote file.
-		*
-		* Do something nice with it!
-		*/
-
-		//printf("%lu bytes retrieved\n", (long)chunk.size);
-	}
-
-	/* cleanup curl stuff */
-	curl_easy_cleanup(curl_handle);
-
-	//free(chunk.memory);
-
-	/* we're done with libcurl, so clean it up */
-	curl_global_cleanup();
-	return chunk;
-}
 void COpenSubDlg::OnDoubleClickSubtitle(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	if (pResult)
@@ -309,25 +241,15 @@ void COpenSubDlg::OnDoubleClickSubtitle(NMHDR *pNMHDR, LRESULT *pResult)
 		EnableButtons(FALSE);
 		PrintMessage(GetSafeHwnd(), L"Downloading");
 		Tools::SetCurrDirToFileLocation(theApp.m_lpCmdLine);
-		MemoryStruct output = DownloadLink(selected_sub.zip_link);
+        Tools::MemoryStruct memory = { 0 };
+        Tools::MemoryStruct extracted_sub = { 0 };
+        Tools::DownloadLink(selected_sub.zip_link, memory);
+        Tools::UnzipFileType(memory.memory, memory.size, selected_sub.format, extracted_sub);
+        std::ofstream out((m_api->GetFileNameNoExt(theApp.m_lpCmdLine) + L'.' + selected_sub.format).c_str(), std::ios::binary);
+        out.write(extracted_sub.memory, extracted_sub.size);
+        out.close();
+        delete[] extracted_sub.memory;
 
-		HZIP hz = OpenZip(output.memory, output.size, 0);
-		ZIPENTRY ze; GetZipItem(hz, -1, &ze); int numitems = ze.index;
-		for (int i = 0; i < numitems; i++)
-		{
-			GetZipItem(hz, i, &ze);
-			std::wstring tmp = std::wstring(ze.name).substr(std::wstring(ze.name).rfind(L'.') + 1);
-			if (std::wstring(ze.name).substr(std::wstring(ze.name).rfind(L'.') + 1).compare(selected_sub.format) == 0)
-			{
-				char* buffer = new char[ze.unc_size];
-				UnzipItem(hz, i, buffer, ze.unc_size);
-				std::ofstream out((m_api->GetFileNameNoExt(theApp.m_lpCmdLine) + L'.' + selected_sub.format).c_str(), std::ios::binary);
-				out.write(buffer, ze.unc_size);
-				out.close();
-			}
-		}
-		CloseZip(hz);
-		free(output.memory);
 		PrintMessage(GetSafeHwnd(), L"Done");
 		EnableButtons(TRUE);
 		EndDialog(IDOK);
@@ -356,25 +278,15 @@ void COpenSubDlg::OnBnClickedPlay()
 			EnableButtons(FALSE);
 			PrintMessage(GetSafeHwnd(), L"Downloading");
 			Tools::SetCurrDirToFileLocation(theApp.m_lpCmdLine);
-			MemoryStruct output = DownloadLink(selected_sub.zip_link);
-
-			HZIP hz = OpenZip(output.memory, output.size, 0);
-			ZIPENTRY ze; GetZipItem(hz, -1, &ze); int numitems = ze.index;
-			for (int i = 0; i < numitems; i++)
-			{
-				GetZipItem(hz, i, &ze);
-				std::wstring tmp = std::wstring(ze.name).substr(std::wstring(ze.name).rfind(L'.') + 1);
-				if (std::wstring(ze.name).substr(std::wstring(ze.name).rfind(L'.') + 1).compare(selected_sub.format) == 0)
-				{
-					char* buffer = new char[ze.unc_size];
-					UnzipItem(hz, i, buffer, ze.unc_size);
-					std::ofstream out((m_api->GetFileNameNoExt(theApp.m_lpCmdLine) + L'.' + selected_sub.format).c_str(), std::ios::binary);
-					out.write(buffer, ze.unc_size);
-					out.close();
-				}
-			}
-			CloseZip(hz);
-			free(output.memory);
+            Tools::MemoryStruct memory;
+            Tools::MemoryStruct extracted_sub;
+            Tools::DownloadLink(selected_sub.zip_link, memory);
+            Tools::UnzipFileType(memory.memory, memory.size, selected_sub.format, extracted_sub);
+            std::ofstream out((m_api->GetFileNameNoExt(theApp.m_lpCmdLine) + L'.' + selected_sub.format).c_str(), std::ios::binary);
+            out.write(extracted_sub.memory, extracted_sub.size);
+            out.close();
+            delete[] extracted_sub.memory;
+			
 			HANDLE hProc;
 			if (Launch(theApp.m_lpCmdLine, &hProc))
 			{

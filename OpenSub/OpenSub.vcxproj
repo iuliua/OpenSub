@@ -60,7 +60,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;CURL_STATICLIB;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -99,7 +99,7 @@ copy /Y $(TargetPath) "$(ProgramFiles)\OSubAgent\OpenSub.exe"</Command>
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;CURL_STATICLIB;WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -119,11 +119,13 @@ copy /Y $(TargetPath) "$(ProgramFiles)\OSubAgent\OpenSub.exe"</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalDependencies>OpenSubtitlesAPI.lib;libcurld.lib</AdditionalDependencies>
+      <AdditionalDependencies>OpenSubtitlesAPI.lib;libcurl.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\OpenSubtitlesAPI\redistribute\;$(SolutionDir)\curl\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>$(SolutionDir)upx\upx.exe -qq "$(TargetPath)"
+      <Command>echo Copying to app folder...
+copy /Y $(TargetPath) "$(ProgramFiles)\OSubAgent\OpenSub.exe"
+$(SolutionDir)upx\upx.exe -qq "$(TargetPath)"
 "C:\Program Files (x86)\NSIS\makensis.exe" /V1 "$(SolutionDir)\installer.nsi"
 echo Copying installer to Google Drive...
 copy $(SolutionDir)OSubAgent.exe "$(HOMEDRIVE)$(HOMEPATH)\Google Drive"</Command>

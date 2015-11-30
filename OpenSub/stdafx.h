@@ -33,6 +33,8 @@
 #include "Tools\zip\unzip.h"
 #include "Tools\CommonTools.h"
 #include "Tools\StringConversion.h"
+#include "Tools\DownloadFile.h"
+#include "Tools\Unzip.h"
 #include <iostream>
 #include <fstream>
 #include "curl/curl.h"
