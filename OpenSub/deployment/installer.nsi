@@ -36,7 +36,7 @@ Section "Install"
   RMDir "$INSTDIR"
 
   SetOutPath $INSTDIR
-  File "Release\OpenSub.exe"
+  File "OpenSub.exe"
   SetRegView 64
   WriteRegStr HKCR '*\shell\OpenSubtitles.org\command' "" '"$INSTDIR\OpenSub.exe" %1'
   WriteRegStr HKCR '*\shell\OpenSubtitles.org' "Icon" "$INSTDIR\OpenSub.exe"
