@@ -40,8 +40,6 @@ public:
    afx_msg void      OnBnClickedExplore();
    afx_msg void      OnBnClickedPlay();
    afx_msg void OnDoubleClickSubtitle(NMHDR *pNMHDR, LRESULT *pResult);
-   CButton m_text_match;
-   CButton m_hash_match;
    afx_msg void OnRadioHash();
 
    // IEventListener

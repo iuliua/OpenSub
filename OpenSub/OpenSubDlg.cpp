@@ -23,8 +23,6 @@ void COpenSubDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BUTTON2, m_btn_explore);
 	DDX_Control(pDX, IDC_BUTTON3, m_btn_play);
 	DDX_Control(pDX, IDC_LINK_MAIN, m_link);
-	DDX_Control(pDX, IDC_RADIO_TEXT, m_text_match);
-	DDX_Control(pDX, IDC_RADIO_HASH, m_hash_match);
 }
 BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_WM_PAINT()
@@ -49,16 +47,22 @@ void COpenSubDlg::InitializeList()
    int nCol;
 
    lvColumn.mask=LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
-   lvColumn.fmt=LVCFMT_LEFT;
-   lvColumn.cx=75;
+   lvColumn.fmt=LVCFMT_RIGHT;
+   lvColumn.cx=50;
    lvColumn.pszText=L"Count";
    nCol=m_results_list_control.InsertColumn(0, &lvColumn);
 
    lvColumn.mask=LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
-   lvColumn.fmt=LVCFMT_LEFT;
-   lvColumn.cx=655;
-   lvColumn.pszText=L"Name";
+   lvColumn.fmt=LVCFMT_RIGHT;
+   lvColumn.cx=50;
+   lvColumn.pszText=L"Rating";
    nCol=m_results_list_control.InsertColumn(1, &lvColumn);
+
+   lvColumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
+   lvColumn.fmt = LVCFMT_LEFT;
+   lvColumn.cx = 405;
+   lvColumn.pszText = L"Name";
+   nCol = m_results_list_control.InsertColumn(2, &lvColumn);
   }
 
 BOOL COpenSubDlg::OnInitDialog()
@@ -92,8 +96,8 @@ BOOL COpenSubDlg::OnInitDialog()
    SetWindowText(path.substr(path.rfind(L'\\') + 1).c_str());
 //--- create list columns
    InitializeList();
-   m_hash_match.SetCheck(1);
    EnableButtons(FALSE);
+   PrintMessage(GetSafeHwnd(), L"Searching");
    return(TRUE);
   }
 
@@ -178,10 +182,8 @@ void COpenSubDlg::OnBnClickedExplore()
 void COpenSubDlg::OnLinkClicked()
 {
 	CString str;
-	if (m_text_match.GetCheck())
-		str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviename-%s", L"eng", m_api->GetFileNameNoExt(theApp.m_lpCmdLine).c_str());
-	if (m_hash_match.GetCheck())
-		str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviebytesize-%s/moviehash-%s", L"eng", m_api->GetFileSize(theApp.m_lpCmdLine).c_str(),m_api->GetFileHash(theApp.m_lpCmdLine).c_str());
+    //str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviename-%s", L"eng", m_api->GetFileNameNoExt(theApp.m_lpCmdLine).c_str());
+    str.Format(L"http://www.opensubtitles.org/search/sublanguageid-%s/moviebytesize-%s/moviehash-%s", L"eng", m_api->GetFileSize(theApp.m_lpCmdLine).c_str(),m_api->GetFileHash(theApp.m_lpCmdLine).c_str());
 	Launch(str);
 }
 BOOL COpenSubDlg::Launch(LPCWSTR cmd,HANDLE *hProc)
@@ -211,8 +213,6 @@ void COpenSubDlg::EnableButtons(BOOL flag)
 	m_btn_download.EnableWindow(flag);
 	m_btn_explore.EnableWindow(flag);
 	m_btn_play.EnableWindow(flag);
-	m_hash_match.EnableWindow(flag);
-	m_text_match.EnableWindow(flag);
 	m_results_list_control.EnableWindow(flag);
 	m_link.EnableWindow(flag);
 }
@@ -328,6 +328,8 @@ void COpenSubDlg::OnSubtitle(IOpenSubtitlesAPI::subtitle_info& info)
 
 void COpenSubDlg::OnSearchComplete()
 {
+    if (m_results_list_control.GetSafeHwnd() == NULL)//if close window before search finish
+        return;
 	std::sort(m_subtitles.begin(), m_subtitles.end());
 	
 	for (unsigned int i = 0; i < m_subtitles.size();i++)
@@ -338,12 +340,18 @@ void COpenSubDlg::OnSearchComplete()
 		lvItem.iSubItem = 0;
 		lvItem.pszText = const_cast<LPWSTR>(m_subtitles[i].download_count.c_str());
 		lvItem.lParam = i;
-
 		m_results_list_control.InsertItem(&lvItem);
-		m_results_list_control.SetItemText(0, 1,m_subtitles[i].release_name.c_str());
+
+        m_results_list_control.SetItemText(0, 1, m_subtitles[i].sub_rating.c_str());
+        if (m_subtitles[i].sub_file_name.size())
+            m_results_list_control.SetItemText(0, 2, m_subtitles[i].sub_file_name.c_str());
+        else
+        if (m_subtitles[i].release_name.size())
+            m_results_list_control.SetItemText(0, 2,m_subtitles[i].release_name.c_str());
 	}
 
 	EnableButtons(TRUE);
+    PrintMessage(GetSafeHwnd(), L"Search finished");
 }
 
 void COpenSubDlg::OnApiReady(IOpenSubtitlesAPI* api)

@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerCommandArguments>c:\Users\julian\Downloads\Star Wars Episode I, II, III, IV, V, VI - Complete Saga George Lucas Eng Subs 720p [H264-mp4]\Star Wars Complete Saga\05 Star Wars Episode V The Empire Strikes Back - George Lucas 1980 Eng Subs 720p [H264-mp4].mp4</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>c:\Users\julian\Downloads\Star Wars Episode I, II, III, IV, V, VI - Complete Saga George Lucas Eng Subs 720p [H264-mp4]\Star Wars Complete Saga\06 Star Wars Episode VI Return Of The Jedi - George Lucas 1983 Eng Subs 720p [H264-mp4].mp4</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerCommandArguments>c:\Users\julian\Downloads\Star Wars Episode I, II, III, IV, V, VI - Complete Saga George Lucas Eng Subs 720p [H264-mp4]\Star Wars Complete Saga\05 Star Wars Episode V The Empire Strikes Back - George Lucas 1980 Eng Subs 720p [H264-mp4].mp4</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>c:\Users\julian\Downloads\Star Wars Episode I, II, III, IV, V, VI - Complete Saga George Lucas Eng Subs 720p [H264-mp4]\Star Wars Complete Saga\06 Star Wars Episode VI Return Of The Jedi - George Lucas 1983 Eng Subs 720p [H264-mp4].mp4</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

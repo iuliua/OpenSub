@@ -155,6 +155,7 @@ bool CXMLBuilder::GetSubtitlesFound(IOpenSubtitlesAPI::SubtitleInfoList &sub_lis
 	//--- find data node
 	pugi::xml_node data_node = member_node.child(_OSVALUE).child(_OSARRAY).child(_OSDATA);
 	//--- go through all values
+    int count = 0;
 	for (pugi::xml_node value_node = data_node.child(_OSVALUE); value_node; value_node = value_node.next_sibling(_OSVALUE))
 	{
 		IOpenSubtitlesAPI::subtitle_info current_info;
@@ -163,24 +164,31 @@ bool CXMLBuilder::GetSubtitlesFound(IOpenSubtitlesAPI::SubtitleInfoList &sub_lis
 		{
 			std::string name = member_node.child(_OSNAME).child_value();
 			std::wstring value = Tools::StringToWString(member_node.child(_OSVALUE).child(_OSSTRING).child_value());
-			if (name == "MatchedBy")
-				current_info.matched_by = value;
-			else
-				if (name == "SubFormat")
-					current_info.format = value;
-				else
-					if (name == "SubDownloadsCnt")
-						current_info.download_count = value;
-					else
-						if (name == "MovieReleaseName")
-							current_info.release_name = value;
-						else
-							if (name == "ZipDownloadLink")
-								current_info.zip_link = value;
+            if (name == "MatchedBy")
+                current_info.matched_by = value;
+            else
+                if (name == "SubFormat")
+                    current_info.format = value;
+                else
+                    if (name == "SubDownloadsCnt")
+                        current_info.download_count = value;
+                    else
+                        if (name == "MovieReleaseName")
+                            current_info.release_name = value;
+                        else
+                            if (name == "ZipDownloadLink")
+                                current_info.zip_link = value;
+                            else
+                                if (name == "SubFileName")
+                                    current_info.sub_file_name = value;
+                                else
+                                    if (name == "SubRating")
+                                        current_info.sub_rating = value;
 		}
 		sub_list.push_back(current_info);
-		if (current_info.matched_by==L"moviehash")
-			event_listener->OnSubtitle(current_info);
+        event_listener->OnSubtitle(current_info);
+        if (++count == 6)
+            break;
 	}
 	return true;
 }
