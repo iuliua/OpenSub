@@ -88,9 +88,6 @@ copy $(ProjectDir)\IOpenSubtitlesAPI.h $(ProjectDir)\redistribute</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="CConnection.h" />
     <ClInclude Include="COpenSubtitlesAPI_Impl.h" />
@@ -107,12 +104,15 @@ copy $(ProjectDir)\IOpenSubtitlesAPI.h $(ProjectDir)\redistribute</Command>
     <ClInclude Include="XMLMemoryWriter.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\CodeLibrary\trunk\MessageLoop\MessageLoop.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="CConnection.cpp" />
     <ClCompile Include="COpenSubtitlesAPIFactory.cpp" />
     <ClCompile Include="COpenSubtitlesAPI_Impl.cpp" />
     <ClCompile Include="CXMLBuilder.cpp" />
     <ClCompile Include="InputFileInfo.cpp" />
-    <ClCompile Include="MessageLoop.cpp" />
     <ClCompile Include="pugixml\pugixml.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>

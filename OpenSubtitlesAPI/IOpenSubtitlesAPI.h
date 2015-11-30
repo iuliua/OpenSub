@@ -40,6 +40,7 @@ private:
 	COpenSubtitlesAPI_Impl *m_impl;
 public:
 	COpenSubtitlesAPIFactory() :m_impl(NULL){};
+    ~COpenSubtitlesAPIFactory();
 	IOpenSubtitlesAPI* Create(const std::wstring &user, const std::wstring &pass, const std::wstring &user_agent, IEventListener*);
 	void Release();
 };

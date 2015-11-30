@@ -10,8 +10,15 @@ IOpenSubtitlesAPI* COpenSubtitlesAPIFactory::Create(const std::wstring &user,con
 	}
 	return m_impl;
 }
-
+COpenSubtitlesAPIFactory::~COpenSubtitlesAPIFactory()
+{
+    Release();
+}
 void COpenSubtitlesAPIFactory::Release()
 {
-	delete m_impl;
+    if (m_impl)
+    {
+        delete m_impl;
+        m_impl = NULL;
+    }
 }

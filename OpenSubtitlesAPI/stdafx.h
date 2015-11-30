@@ -18,7 +18,7 @@
 #include <vector>
 #include "pugixml/pugixml.hpp"
 #include <WinInet.h>
-
+#define MSG_SEARCH CMessageLoop::MSG_START
 #include "Tools\StringConversion.h"
 #include "Buffer.h"
 #include "XMLMemoryWriter.h"
@@ -26,5 +26,5 @@
 #include "IOpenSubtitlesAPI.h"
 #include "CXMLBuilder.h"
 #include "CConnection.h"
-#include "MessageLoop.h"
+#include "MessageLoop/MessageLoop.h"
 #include "COpenSubtitlesAPI_Impl.h"

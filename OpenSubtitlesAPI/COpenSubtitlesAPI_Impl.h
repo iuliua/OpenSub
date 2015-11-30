@@ -1,11 +1,7 @@
 #pragma once
 
-class COpenSubtitlesAPI_Impl :public IOpenSubtitlesAPI,public CMessageLoop
+class COpenSubtitlesAPI_Impl :public IOpenSubtitlesAPI,public IMessageProcessor
 {
-private:
-	enum {
-		MSG_SEARCH=MSG_START
-	};
 	
 private:
 	CConnection     m_connection;
@@ -16,6 +12,7 @@ private:
 	CHAR            m_token[64];
 	SubtitleInfoList m_sub_list;
 	std::wstring     m_error_text;
+    CMessageLoop    m_loop;
 
 public:
 	COpenSubtitlesAPI_Impl(const std::wstring &user, const std::wstring &pass, const std::wstring &user_agent,IEventListener*);
@@ -32,5 +29,5 @@ private:
 	bool Login();
 	bool Logout();
 	bool Search(LPCWSTR);
-	virtual void ProcessMessage(MSG&) override;
+    virtual BOOL ProcessMessage(UINT, LPVOID, BOOL) override;
 };
