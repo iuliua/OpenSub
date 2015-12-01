@@ -88,14 +88,14 @@ BEGIN
     CTEXT           "www.opensubtitles.org",IDC_LINK_MAIN,265,7,89,12,SS_NOTIFY | SS_CENTERIMAGE
 END
 
-IDD_ABOUTBOX DIALOGEX 0, 0, 141, 49
+IDD_ABOUTBOX DIALOGEX 0, 0, 241, 50
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About"
 FONT 8, "Trebuchet MS", 400, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,41,26,50,14
-    LTEXT           "OpenSub 2.5b",IDC_STATIC,44,7,47,8
-    LTEXT           "Powered by opensubtitles.org",IDC_LINK,21,16,98,8,SS_NOTIFY
+    DEFPUSHBUTTON   "OK",IDOK,90,26,50,14
+    LTEXT           "OpenSub by Julian Atudosiei",IDC_STATIC,72,7,109,8
+    LTEXT           "Powered by opensubtitles.org",IDC_LINK,66,16,106,8,SS_NOTIFY
 END
 
 
@@ -157,9 +157,9 @@ BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 134
+        RIGHTMARGIN, 234
         TOPMARGIN, 7
-        BOTTOMMARGIN, 42
+        BOTTOMMARGIN, 43
     END
 END
 #endif    // APSTUDIO_INVOKED

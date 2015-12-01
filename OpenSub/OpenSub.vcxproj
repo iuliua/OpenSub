@@ -155,7 +155,6 @@ copy $(SolutionDir)\deployment\OSubAgent.exe "$(HOMEDRIVE)$(HOMEPATH)\Google Dri
     <ClInclude Include="Tools.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\res\OpenSub.ico" />
     <Image Include="res\OpenSub.ico" />
   </ItemGroup>
   <ItemGroup>
