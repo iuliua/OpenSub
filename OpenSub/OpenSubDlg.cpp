@@ -35,34 +35,17 @@ BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
    ON_BN_CLICKED(IDC_BUTTON3, &COpenSubDlg::OnBnClickedPlay)
    ON_BN_CLICKED(IDC_LINK_MAIN,&OnLinkClicked)
    ON_NOTIFY(NM_DBLCLK, IDC_LIST1, &COpenSubDlg::OnDoubleClickSubtitle)
-   ON_COMMAND(IDC_RADIO_HASH, &COpenSubDlg::OnRadioHash)
-   ON_COMMAND(IDC_RADIO_TEXT, &COpenSubDlg::OnRadioHash)
 END_MESSAGE_MAP()
 
 void COpenSubDlg::InitializeList()
   {
-   m_results_list_control.SetExtendedStyle(LVS_EX_FULLROWSELECT|LVS_EX_AUTOSIZECOLUMNS);
+   m_results_list_control.SetExtendedStyle(LVS_EX_FULLROWSELECT);
 
-   LVCOLUMN lvColumn;
-   int nCol;
-
-   lvColumn.mask=LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
-   lvColumn.fmt=LVCFMT_RIGHT;
-   lvColumn.cx=50;
-   lvColumn.pszText=L"Count";
-   nCol=m_results_list_control.InsertColumn(0, &lvColumn);
-
-   lvColumn.mask=LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
-   lvColumn.fmt=LVCFMT_RIGHT;
-   lvColumn.cx=50;
-   lvColumn.pszText=L"Rating";
-   nCol=m_results_list_control.InsertColumn(1, &lvColumn);
-
-   lvColumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
-   lvColumn.fmt = LVCFMT_LEFT;
-   lvColumn.cx = 405;
-   lvColumn.pszText = L"Name";
-   nCol = m_results_list_control.InsertColumn(2, &lvColumn);
+   CRect rect;
+   m_results_list_control.GetClientRect(&rect);
+   int nColInterval = rect.Width() / 8;
+   m_results_list_control.InsertColumn(0, L"Count",LVCFMT_CENTER,nColInterval);
+   m_results_list_control.InsertColumn(1, L"Name",LVCFMT_LEFT,nColInterval*7);
   }
 
 BOOL COpenSubDlg::OnInitDialog()
@@ -157,11 +140,6 @@ HCURSOR COpenSubDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-void COpenSubDlg::OnBnClickedDownload()
-  {
-	OnDoubleClickSubtitle(NULL, NULL);
-  }
-
 void COpenSubDlg::OnBnClickedExplore()
   {
    WCHAR command[512];
@@ -219,28 +197,21 @@ void COpenSubDlg::EnableButtons(BOOL flag)
 
 BOOL COpenSubDlg::GetSelectedSubtitle(IOpenSubtitlesAPI::subtitle_info& info)
 {
-	//--- get info on selected item
-	int selected_item = m_results_list_control.GetNextItem(-1, LVNI_SELECTED);
+    POSITION s=m_results_list_control.GetFirstSelectedItemPosition();
+    int selected_item = m_results_list_control.GetNextSelectedItem(s);
 	if (selected_item < 0)
 		return FALSE;
-	LVITEM item = { 0 };
-	item.mask = LVIF_PARAM;
-	item.iItem = selected_item;
-	m_results_list_control.GetItem(&item);
-	info= m_subtitles[item.lParam];
+    info = m_subtitles[m_results_list_control.GetItemData(selected_item)];
 	return TRUE;
 }
-
-void COpenSubDlg::OnDoubleClickSubtitle(NMHDR *pNMHDR, LRESULT *pResult)
+void COpenSubDlg::OnBnClickedDownload()
 {
-	if (pResult)
-		*pResult = 0;
-	IOpenSubtitlesAPI::subtitle_info selected_sub;
-	if (GetSelectedSubtitle(selected_sub))
-	{
-		EnableButtons(FALSE);
-		PrintMessage(GetSafeHwnd(), L"Downloading");
-		Tools::SetCurrDirToFileLocation(theApp.m_lpCmdLine);
+    IOpenSubtitlesAPI::subtitle_info selected_sub;
+    if (GetSelectedSubtitle(selected_sub))
+    {
+        EnableButtons(FALSE);
+        PrintMessage(GetSafeHwnd(), L"Downloading");
+        Tools::SetCurrDirToFileLocation(theApp.m_lpCmdLine);
         Tools::MemoryStruct memory;
         Tools::MemoryStruct extracted_sub;
         Tools::DownloadLink(selected_sub.zip_link, memory);
@@ -250,10 +221,15 @@ void COpenSubDlg::OnDoubleClickSubtitle(NMHDR *pNMHDR, LRESULT *pResult)
         out.close();
         delete[] extracted_sub.memory;
 
-		PrintMessage(GetSafeHwnd(), L"Done");
-		EnableButtons(TRUE);
-		EndDialog(IDOK);
-	}
+        PrintMessage(GetSafeHwnd(), L"Done");
+        EnableButtons(TRUE);
+        EndDialog(IDOK);
+    }
+}
+
+void COpenSubDlg::OnDoubleClickSubtitle(NMHDR *pNMHDR, LRESULT *pResult)
+{
+    OnBnClickedDownload();
 }
 void COpenSubDlg::OnBnClickedPlay()
 {
@@ -312,9 +288,6 @@ void COpenSubDlg::OnBnClickedPlay()
 		return;
 	}
 }
-void COpenSubDlg::OnRadioHash()
-{
-}
 
 void COpenSubDlg::OnError(std::wstring error_details)
 {
@@ -328,30 +301,31 @@ void COpenSubDlg::OnSubtitle(IOpenSubtitlesAPI::subtitle_info& info)
 
 void COpenSubDlg::OnSearchComplete()
 {
-    if (m_results_list_control.GetSafeHwnd() == NULL)//if close window before search finish
-        return;
-	std::sort(m_subtitles.begin(), m_subtitles.end());
-	
-	for (unsigned int i = 0; i < m_subtitles.size();i++)
-	{
-		LVITEM lvItem = { 0 };
-		lvItem.mask = LVIF_TEXT | LVIF_PARAM;
-		lvItem.iItem = 0;
-		lvItem.iSubItem = 0;
-		lvItem.pszText = const_cast<LPWSTR>(m_subtitles[i].download_count.c_str());
-		lvItem.lParam = i;
-		m_results_list_control.InsertItem(&lvItem);
+    if (m_results_list_control.GetSafeHwnd())//if close window before search finish
+    {
+        std::sort(m_subtitles.begin(), m_subtitles.end());
 
-        m_results_list_control.SetItemText(0, 1, m_subtitles[i].sub_rating.c_str());
-        if (m_subtitles[i].sub_file_name.size())
-            m_results_list_control.SetItemText(0, 2, m_subtitles[i].sub_file_name.c_str());
-        else
-        if (m_subtitles[i].release_name.size())
-            m_results_list_control.SetItemText(0, 2,m_subtitles[i].release_name.c_str());
-	}
+        for (unsigned int i = 0; i < m_subtitles.size(); i++)
+        {
+            LVITEM lvItem;
+            lvItem.mask = LVIF_TEXT | LVIF_PARAM;
+            lvItem.iItem = 0;
+            lvItem.iSubItem = 0;
+            lvItem.pszText = const_cast<LPWSTR>(m_subtitles[i].download_count.c_str());
+            lvItem.lParam = i;
+            m_results_list_control.InsertItem(&lvItem);
 
-	EnableButtons(TRUE);
-    PrintMessage(GetSafeHwnd(), L"Search finished");
+            if (m_subtitles[i].sub_file_name.size())
+                m_results_list_control.SetItemText(0, 1, m_subtitles[i].sub_file_name.c_str());
+            else
+                if (m_subtitles[i].release_name.size())
+                    m_results_list_control.SetItemText(0, 1, m_subtitles[i].release_name.c_str());
+        }
+        if (m_subtitles.size())
+            m_results_list_control.SetItemState(0, LVIS_SELECTED, LVIS_SELECTED | LVIS_FOCUSED);
+        EnableButtons(TRUE);
+        PrintMessage(GetSafeHwnd(), L"Search finished");
+    }
 }
 
 void COpenSubDlg::OnApiReady(IOpenSubtitlesAPI* api)

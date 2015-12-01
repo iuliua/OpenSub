@@ -181,9 +181,6 @@ bool CXMLBuilder::GetSubtitlesFound(IOpenSubtitlesAPI::SubtitleInfoList &sub_lis
                             else
                                 if (name == "SubFileName")
                                     current_info.sub_file_name = value;
-                                else
-                                    if (name == "SubRating")
-                                        current_info.sub_rating = value;
 		}
 		sub_list.push_back(current_info);
         event_listener->OnSubtitle(current_info);

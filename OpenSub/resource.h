@@ -23,8 +23,6 @@
 #define IDC_LINK_MAIN                   1012
 #define IDC_BUTTON4                     1013
 #define IDC_BUTTON_LANG                 1013
-#define IDC_RADIO_HASH                  1014
-#define IDC_RADIO_TEXT                  1015
 
 // Next default values for new objects
 // 

@@ -18,7 +18,6 @@ public:
 		std::wstring zip_link;
 		std::wstring sub_file_name;
 		std::wstring matched_by;
-        std::wstring sub_rating;
 		bool operator < (const subtitle_info& str) const
 		{
 			return (_wtoi(download_count.c_str()) < _wtoi(str.download_count.c_str()));
