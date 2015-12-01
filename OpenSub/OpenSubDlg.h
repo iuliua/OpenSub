@@ -40,7 +40,6 @@ public:
    afx_msg void      OnBnClickedExplore();
    afx_msg void      OnBnClickedPlay();
    afx_msg void OnDoubleClickSubtitle(NMHDR *pNMHDR, LRESULT *pResult);
-   afx_msg void OnRadioHash();
 
    // IEventListener
    virtual void OnError(std::wstring error_details) override;

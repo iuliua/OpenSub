@@ -38,15 +38,15 @@ BEGIN_MESSAGE_MAP(COpenSubDlg, CDialog)
 END_MESSAGE_MAP()
 
 void COpenSubDlg::InitializeList()
-  {
-   m_results_list_control.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+{
+    ListView_SetExtendedListViewStyle(m_results_list_control.m_hWnd, LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP);
 
-   CRect rect;
-   m_results_list_control.GetClientRect(&rect);
-   int nColInterval = rect.Width() / 8;
-   m_results_list_control.InsertColumn(0, L"Count",LVCFMT_CENTER,nColInterval);
-   m_results_list_control.InsertColumn(1, L"Name",LVCFMT_LEFT,nColInterval*7);
-  }
+    CRect rect;
+    m_results_list_control.GetClientRect(&rect);
+    int nColInterval = rect.Width() / 8;
+    m_results_list_control.InsertColumn(0, L"Count", LVCFMT_CENTER, nColInterval);
+    m_results_list_control.InsertColumn(1, L"Name", LVCFMT_LEFT, nColInterval * 7);
+}
 
 BOOL COpenSubDlg::OnInitDialog()
   {
